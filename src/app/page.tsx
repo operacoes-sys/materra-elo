@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ESTADOS_BRASIL, ACONDICIONAMENTOS, WHATSAPP_NUM } from '@/lib/constants'
 import { CATALOGO_MATERRA_ELO } from '@/lib/catalogo'
+import LandingPage from './LandingPage'
 
 // Typographic Logo component
 const LogoBrand = () => (
@@ -2120,29 +2121,23 @@ export default function Home() {
             </>
           ) : (
             <>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <Link href="/auth/login" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: '#000', fontWeight: 'bold' }}>
-                  Login / Cadastro
-                </Link>
-                <Link href="/auth/cadastro?role=transportadora" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: 'var(--primary-500)', border: '1px solid var(--primary-500)', background: 'transparent' }}>
-                  Login / Cadastro de Transportadoras
-                </Link>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Link href="#sobre" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-500)'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>Sobre</Link>
+                <Link href="#funcionalidades" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-500)'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>O que fazemos</Link>
+                <Link href="#jornadas" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-500)'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>Jornadas</Link>
+                <Link href="#corretores" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-500)'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>Corretores</Link>
+                <Link href="#mercado-potencial" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-500)'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>Mercado Potencial</Link>
+                <Link href="/quotas" style={{ color: 'var(--primary-500)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Cotações</Link>
               </div>
 
-              {/* Ficha search bar inside the header */}
-              <form onSubmit={handleFichaSearch} style={{ display: 'flex', gap: '8px', flex: '1', maxWidth: '350px' }}>
-                <input
-                  type="text"
-                  placeholder="Buscar Fichas por nome de empresas..."
-                  value={searchFichaQuery}
-                  onChange={e => setSearchFichaQuery(e.target.value)}
-                  className="form-input"
-                  style={{ padding: '8px 12px', background: '#121212', color: '#fff', fontSize: '0.85rem', height: '38px', border: '1px solid #333' }}
-                />
-                <button type="submit" className="btn btn-primary" style={{ padding: '0 16px', height: '38px', fontSize: '0.85rem', color: '#000', fontWeight: 'bold' }}>
-                  Buscar
-                </button>
-              </form>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <Link href="/auth/login" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: '#000', fontWeight: 'bold' }}>
+                  Acessar
+                </Link>
+                <Link href="/auth/cadastro?role=usuario" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: 'var(--primary-500)', border: '1px solid var(--primary-500)', background: 'transparent' }}>
+                  Cadastrar
+                </Link>
+              </div>
             </>
           )}
         </div>
@@ -3327,136 +3322,12 @@ export default function Home() {
 
       {/* VITRINE HERO AREA */}
       {!user && (
-        <div style={{
-          padding: '80px 20px 60px',
-          background: 'radial-gradient(circle at center, #111111 0%, #000000 100%)',
-          borderBottom: '1px solid #222'
-        }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-            <span style={{
-              display: 'inline-block',
-              padding: '6px 16px',
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid var(--primary-500)',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              color: 'var(--primary-500)',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              marginBottom: '24px',
-              letterSpacing: '1px'
-            }}>
-              Quantidade e padronização para negociar em escala, com compliance e economia
-            </span>
-            <h1 style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', marginBottom: '20px', lineHeight: '1.2' }}>
-              Marketplace Materra Elo
-            </h1>
-            <p style={{ color: '#ccc', fontSize: '1.15rem', lineHeight: '1.6', maxWidth: '850px', margin: '0 auto 32px', textAlign: 'center' }}>
-              Conectamos geradores, compradores e transportadoras credenciados, em total conformidade com a legislação ambiental e jurídica brasileira. Na Materra Elo você escolhe com quem negociar pela Ficha Materra, fecha com segurança e elimina o risco operacional.
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '64px' }}>
-              <Link href="/auth/cadastro?role=usuario" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: '0.95rem', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}>
-                Cadastre-se gratuitamente
-              </Link>
-              <Link href="/auth/login" className="btn btn-secondary" style={{ padding: '14px 28px', fontSize: '0.95rem', color: '#fff', background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px' }}>
-                Publique seu anúncio
-              </Link>
-            </div>
-
-            {/* SEÇÃO MERCADO POTENCIAL */}
-            <MercadoPotencialSection />
-
-            {/* SEÇÃO POR QUE ESCOLHER */}
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', marginBottom: '40px', position: 'relative' }}>
-              Por que empresas líderes escolhem a Materra Elo
-            </h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', textAlign: 'left', marginBottom: '60px' }}>
-              
-              {/* Card 1 */}
-              <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '12px', padding: '24px', transition: 'border-color 0.2s' }}>
-                <div style={{ fontSize: '2rem', color: 'var(--primary-500)', fontWeight: 'bold', marginBottom: '12px' }}>01</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>
-                  Ficha Materra: credibilidade antes do negócio
-                </h3>
-                <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Todo participante passa por verificação documental completa e recebe:
-                </p>
-                <ul style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5', margin: '8px 0', paddingLeft: '20px' }}>
-                  <li>Selo de compliance ambiental e operacional: Bronze, Prata ou Ouro</li>
-                  <li>Nota de operação de 0 a 100, baseada em histórico e desempenho</li>
-                </ul>
-                <p style={{ color: 'var(--primary-500)', fontSize: '0.9rem', fontWeight: 'bold', marginTop: '8px' }}>
-                  Você negocia sabendo exatamente quem está do outro lado.
-                </p>
-              </div>
-
-              {/* Card 2 */}
-              <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ fontSize: '2rem', color: 'var(--primary-500)', fontWeight: 'bold', marginBottom: '12px' }}>02</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>
-                  Leilões que maximizam resultado
-                </h3>
-                <ul style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5', margin: '8px 0', paddingLeft: '20px' }}>
-                  <li><strong>Ascendente:</strong> para resíduos com valor de mercado</li>
-                  <li><strong>Descendente:</strong> para passivos ambientais</li>
-                  <li><strong>Reverso de frete:</strong> para contratar transporte</li>
-                </ul>
-                <p style={{ color: 'var(--primary-500)', fontSize: '0.9rem', fontWeight: 'bold', marginTop: '12px' }}>
-                  Seu resíduo sai pelo melhor preço. Seu frete entra pelo menor custo.
-                </p>
-              </div>
-
-              {/* Card 3 */}
-              <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ fontSize: '2rem', color: 'var(--primary-500)', fontWeight: 'bold', marginBottom: '12px' }}>03</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>
-                  Buscador de Licenças e PGRS
-                </h3>
-                <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Consulte qualquer empresa por nome ou CNPJ e acesse na hora a licença ambiental vigente, o PGRS e a avaliação pública. Due diligence real, antes de fechar.
-                </p>
-              </div>
-
-              {/* Card 4 */}
-              <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ fontSize: '2rem', color: 'var(--primary-500)', fontWeight: 'bold', marginBottom: '12px' }}>04</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>
-                  Audit Trail completo e privado
-                </h3>
-                <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Geramos o histórico integral de cada transação: valores, quantidades, MTR, CDF e avaliações trilaterais. É a prova auditável da sua conformidade, pronta para auditorias e órgãos fiscalizadores.
-                </p>
-              </div>
-
-              {/* Card 5 */}
-              <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ fontSize: '2rem', color: 'var(--primary-500)', fontWeight: 'bold', marginBottom: '12px' }}>05</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>
-                  Selos de compliance no seu perfil
-                </h3>
-                <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Exiba seus selos de documentação e operação na sua ficha pública. Empresas verificadas têm prioridade nas buscas, mais visibilidade e fecham mais rápido.
-                </p>
-              </div>
-
-            </div>
-
-            {/* CALL TO ACTION FINAL */}
-            <div style={{ background: 'linear-gradient(135deg, #1c1c1c 0%, #0a0a0a 100%)', border: '1px solid var(--primary-500)', borderRadius: '16px', padding: '40px' }}>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginBottom: '12px' }}>
-                Segurança jurídica para quem opera resíduo no Brasil
-              </h3>
-              <p style={{ color: '#ccc', fontSize: '1rem', lineHeight: '1.5', maxWidth: '750px', margin: '0 auto 24px' }}>
-                A Materra Elo não é um classificado. É infraestrutura de confiança para um mercado regulado. Negocie apenas com empresas verificadas. Tenha rastreabilidade total. Opere em conformidade.
-              </p>
-              <Link href="/auth/cadastro?role=usuario" className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '1rem', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}>
-                Começar agora. É gratuito
-              </Link>
-            </div>
-
-          </div>
-        </div>
+        <LandingPage
+          searchFichaQuery={searchFichaQuery}
+          setSearchFichaQuery={setSearchFichaQuery}
+          handleFichaSearch={handleFichaSearch}
+          searchingFicha={searchingFicha}
+        />
       )}
 
       {/* STOCK TICKER MARQUEE */}
