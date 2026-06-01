@@ -43,8 +43,27 @@ const getAuctionStatus = (ad: any) => {
   };
 };
 
+const ADMIN_USER = 'Lucas Souto'
+const ADMIN_PASS = 'AtlasWillConquerALL'
+
 export default function AdminDashboard() {
   const supabase = createClient()
+
+  // Local admin gate
+  const [adminUnlocked, setAdminUnlocked] = useState(false)
+  const [adminUser, setAdminUser] = useState('')
+  const [adminPass, setAdminPass] = useState('')
+  const [adminLoginError, setAdminLoginError] = useState('')
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (adminUser === ADMIN_USER && adminPass === ADMIN_PASS) {
+      setAdminUnlocked(true)
+      setAdminLoginError('')
+    } else {
+      setAdminLoginError('Usuário ou senha incorretos.')
+    }
+  }
 
   const [isAdmin, setIsAdmin] = useState(false)
   const [loadingAuth, setLoadingAuth] = useState(true)
@@ -104,6 +123,7 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    if (!adminUnlocked) return
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
@@ -119,7 +139,7 @@ export default function AdminDashboard() {
       setLoadingAuth(false)
     }
     checkAuth()
-  }, [])
+  }, [adminUnlocked])
 
   useEffect(() => {
     if (isAdmin) {
@@ -898,6 +918,58 @@ export default function AdminDashboard() {
       setNewLeadTel('')
       loadData()
     }
+  }
+
+  // Admin gate — must pass local login before anything loads
+  if (!adminUnlocked) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+        <div style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: '16px', padding: '48px 40px', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+          <img src="/logo.png" alt="Materra Elo" style={{ height: '52px', objectFit: 'contain', marginBottom: '20px' }} />
+          <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 900, marginBottom: '4px' }}>Painel Administrativo</h1>
+          <p style={{ color: '#666', fontSize: '0.85rem', marginBottom: '28px' }}>Acesso restrito — identifique-se para continuar.</p>
+
+          {adminLoginError && (
+            <div style={{ background: 'rgba(239,83,80,0.1)', border: '1px solid #ef5350', color: '#ef5350', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>
+              {adminLoginError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+            <div>
+              <label style={{ color: '#aaa', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Nome de usuário</label>
+              <input
+                type="text"
+                autoComplete="username"
+                value={adminUser}
+                onChange={e => setAdminUser(e.target.value)}
+                placeholder="Ex: Lucas Souto"
+                required
+                style={{ width: '100%', background: '#000', border: '1px solid #333', borderRadius: '8px', padding: '10px 14px', color: '#fff', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ color: '#aaa', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Senha</label>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={adminPass}
+                onChange={e => setAdminPass(e.target.value)}
+                placeholder="••••••••••"
+                required
+                style={{ width: '100%', background: '#000', border: '1px solid #333', borderRadius: '8px', padding: '10px 14px', color: '#fff', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <button
+              type="submit"
+              style={{ marginTop: '8px', background: 'var(--primary-500)', color: '#000', border: 'none', borderRadius: '8px', padding: '12px', fontWeight: 900, fontSize: '1rem', cursor: 'pointer', letterSpacing: '0.02em' }}
+            >
+              Entrar no Painel
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   if (loadingAuth) {
