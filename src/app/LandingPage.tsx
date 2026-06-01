@@ -62,12 +62,47 @@ export default function LandingPage({
 
   return (
     <div style={{ background: '#000', color: '#f5f5f5', fontFamily: 'Inter, sans-serif' }}>
+      {/* Dynamic Keyframes and Classes */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes floatLogo {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(1deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes subtlePulse {
+          0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.05); }
+          50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.15); }
+          100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.05); }
+        }
+        .animate-logo {
+          animation: floatLogo 6s ease-in-out infinite;
+        }
+        .pulse-card {
+          animation: subtlePulse 4s ease-in-out infinite;
+        }
+        .hover-card {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .hover-card:hover {
+          transform: translateY(-6px);
+          border-color: var(--primary-500) !important;
+          box-shadow: 0 12px 30px rgba(255, 215, 0, 0.12) !important;
+        }
+        .factory-img {
+          transition: transform 0.6s ease, filter 0.6s ease;
+          filter: grayscale(1) brightness(0.5);
+        }
+        .factory-img:hover {
+          transform: scale(1.04);
+          filter: grayscale(0) brightness(0.9);
+        }
+      `}} />
       
       {/* HERO SECTION */}
       <section style={{
         position: 'relative',
         padding: '120px 20px 100px',
-        background: 'radial-gradient(circle at center, #181818 0%, #000000 100%)',
+        background: 'radial-gradient(circle at center, #141414 0%, #000000 100%)',
         borderBottom: '1px solid #1c1c1c',
         overflow: 'hidden'
       }}>
@@ -77,59 +112,58 @@ export default function LandingPage({
           top: '20%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '500px',
-          height: '500px',
-          background: 'rgba(255, 215, 0, 0.04)',
+          width: '600px',
+          height: '600px',
+          background: 'rgba(255, 215, 0, 0.03)',
           borderRadius: '50%',
-          filter: 'blur(100px)',
+          filter: 'blur(120px)',
           pointerEvents: 'none',
           zIndex: 1
         }}></div>
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 2 }}>
           {/* Logo dissolving animation */}
-          <div style={{ display: 'inline-flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'inline-flex', justifyContent: 'center', marginBottom: '32px' }} className="animate-logo">
             <div style={{
-              padding: '12px',
-              background: 'rgba(255, 215, 0, 0.05)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
+              padding: '8px',
+              background: 'rgba(255, 215, 0, 0.03)',
+              border: '2px solid rgba(255, 215, 0, 0.25)',
               borderRadius: '50%',
-              boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)'
-            }}>
+            }} className="pulse-card">
               <img 
                 src="/logo.png" 
                 alt="Logo Materra Elo" 
-                style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
+                style={{ height: '96px', width: '96px', borderRadius: '50%', objectFit: 'cover' }} 
               />
             </div>
           </div>
 
           <h1 style={{
-            fontSize: '3rem',
+            fontSize: '3.3rem',
             fontWeight: 900,
             lineHeight: '1.15',
             letterSpacing: '-0.03em',
             color: '#fff',
-            maxWidth: '900px',
+            maxWidth: '1000px',
             margin: '0 auto 24px',
             fontFamily: 'system-ui, -apple-system, sans-serif'
           }}>
-            A Maior Plataforma B2B de <span style={{ color: 'var(--primary-500)', background: 'linear-gradient(90deg, #ffd700, #ffb300)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Coprodutos e Resíduos</span> do Brasil
+            O Novo Mercado Digital de <span style={{ color: 'var(--primary-500)', background: 'linear-gradient(90deg, #ffd700, #ffb300)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Coprodutos e Insumos Residuais</span> do Brasil
           </h1>
 
           <p style={{
             fontSize: '1.2rem',
             color: '#aaa',
             lineHeight: '1.6',
-            maxWidth: '750px',
+            maxWidth: '850px',
             margin: '0 auto 40px'
           }}>
-            Rastreabilidade total e conformidade socioambiental absoluta. Conectamos geradores, compradores, transportadoras e corretores através da Ficha Materra com auditoria trilateral criptografada.
+            Compre, venda e intermedeie resíduos industriais e agro em todo o país com validação documental rigorosa, checagem de licenças em tempo real e inteligência de preços. <strong style={{ color: 'var(--primary-500)' }}>Atenção Corretores:</strong> Encontre resíduos na sua região, anuncie com exclusividade e garanta seu comissionamento 100% blindado.
           </p>
 
           {/* Quick Ficha Search on Hero */}
           <div style={{
-            maxWidth: '550px',
+            maxWidth: '580px',
             margin: '0 auto 48px',
             background: '#0a0a0a',
             border: '1px solid #222',
@@ -234,7 +268,7 @@ export default function LandingPage({
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
             {/* Box 1 */}
-            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }} className="hover-card">
               <div style={{ fontSize: '1.8rem', marginBottom: '16px' }}>🛡️</div>
               <h3 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 'bold', marginBottom: '12px' }}>Compliance Criptografado</h3>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: '1.5' }}>
@@ -243,7 +277,7 @@ export default function LandingPage({
             </div>
 
             {/* Box 2 */}
-            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }} className="hover-card">
               <div style={{ fontSize: '1.8rem', marginBottom: '16px' }}>📊</div>
               <h3 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 'bold', marginBottom: '12px' }}>Audit Trail Trilateral</h3>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: '1.5' }}>
@@ -252,7 +286,7 @@ export default function LandingPage({
             </div>
 
             {/* Box 3 */}
-            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '32px' }} className="hover-card">
               <div style={{ fontSize: '1.8rem', marginBottom: '16px' }}>⚡</div>
               <h3 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 'bold', marginBottom: '12px' }}>Leilões Inteligentes</h3>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: '1.5' }}>
@@ -275,9 +309,9 @@ export default function LandingPage({
               border: '1px solid rgba(255, 215, 0, 0.15)',
               borderRadius: '24px',
               padding: '36px',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.8), var(--shadow-glow)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.8)',
               position: 'relative'
-            }}>
+            }} className="pulse-card">
               {/* Badge */}
               <div style={{
                 position: 'absolute',
@@ -447,8 +481,10 @@ export default function LandingPage({
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,215,0,0.1)', border: '1px solid var(--primary-500)', color: 'var(--primary-500)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>3</div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Negociação via WhatsApp com Assessoria</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Compradores clicam em "Tenho interesse" e negociam via assessoria com suporte a leilões (ascendente ou descendente) para obter o melhor retorno comercial.</p>
+                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Redução de Custos Logísticos com o <span style={{ color: 'var(--primary-500)' }}>Materra ReverseBid™</span></h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>
+                        Através da funcionalidade <strong>Materra ReverseBid™</strong> (Leilão Reverso de Frete), as transportadoras credenciadas competem para ver quem oferece o menor valor por quilômetro para transportar o seu resíduo, garantindo economia operacional imediata.
+                      </p>
                     </div>
                   </div>
 
@@ -513,8 +549,10 @@ export default function LandingPage({
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,215,0,0.1)', border: '1px solid var(--primary-500)', color: 'var(--primary-500)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>2</div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Leilão Reverso de Frete</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Receba convites de cargas geradas na plataforma compatíveis com a sua rota e dê lances competitivos de frete por Km.</p>
+                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Competição no <span style={{ color: 'var(--primary-500)' }}>Materra ReverseBid™</span></h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>
+                        Acesse as ofertas logísticas ativas e dê lances decrescentes pelo valor do Km de transporte. O algoritmo do <strong>Materra ReverseBid™</strong> seleciona a melhor proposta, garantindo cargas recorrentes para sua frota de forma limpa e transparente.
+                      </p>
                     </div>
                   </div>
 
@@ -538,24 +576,24 @@ export default function LandingPage({
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,215,0,0.1)', border: '1px solid var(--primary-500)', color: 'var(--primary-500)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>1</div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Gerenciamento Integrado de Carteira</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Cadastre ofertas e demandas em nome dos seus clientes representados. Mantenha controle absoluto de quem vende e compra.</p>
+                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Mapeamento & Prospecção</h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Encontre indústrias, abatedouros ou construtoras gerando resíduos na sua região. Traga-os para a Materra Elo.</p>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,215,0,0.1)', border: '1px solid var(--primary-500)', color: 'var(--primary-500)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>2</div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Privacidade Blindada</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Seus parceiros de negócio permanecem ocultados na vitrine pública, aparecendo somente o seu perfil de corretor para manter a exclusividade das negociações.</p>
+                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Anúncio Preservado</h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Publique o material mantendo o CNPJ da fonte original oculto na vitrine pública. Somente o seu contato de Corretor será exibido para as propostas.</p>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,215,0,0.1)', border: '1px solid var(--primary-500)', color: 'var(--primary-500)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>3</div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Concierge & Comissões Garantidas</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Faturamento direto e intermediação financeira segura via Materra Elo, assegurando seu comissionamento nas transações.</p>
+                      <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold', margin: '0 0 6px' }}>Comissionamento Blindado</h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Todas as ofertas logísticas e transações geram contratos digitais seguros na plataforma, assegurando o seu percentual de intermediação.</p>
                     </div>
                   </div>
                 </div>
@@ -677,6 +715,7 @@ export default function LandingPage({
                     position: 'relative',
                     transition: 'border-color 0.2s'
                   }}
+                  className="hover-card"
                 >
                   <div style={{ color: '#666', fontSize: '0.75rem', fontWeight: 'bold', position: 'absolute', top: '16px', right: '16px' }}>
                     0{idx + 1}
@@ -721,7 +760,7 @@ export default function LandingPage({
             gridTemplateColumns: '1fr 1fr',
             gap: '24px',
             textAlign: 'center'
-          }}>
+          }} className="pulse-card">
             <div>
               <div style={{ fontSize: '0.8rem', color: '#aaa', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '6px' }}>
                 Total acumulado nesta sessão (t + m³)
@@ -747,8 +786,50 @@ export default function LandingPage({
         </div>
       </section>
 
+      {/* FACTORY IMAGES SECTION */}
+      <section style={{ padding: '60px 20px', background: '#000', borderBottom: '1px solid #111' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+            <span style={{ color: 'var(--primary-500)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.15em' }}>Nossa Rede</span>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginTop: '6px' }}>
+              De onde vêm os coprodutos e insumos recicláveis negociados
+            </h3>
+          </div>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px'
+          }}>
+            <div style={{ overflow: 'hidden', borderRadius: '16px', border: '1px solid #222', background: '#050505', position: 'relative' }}>
+              <img src="/factory1.png" alt="Bioenergia cana" className="factory-img" style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }} />
+              <div style={{ padding: '16px' }}>
+                <strong style={{ color: '#fff', fontSize: '0.95rem', display: 'block' }}>Usinas de Bioenergia & Agro</strong>
+                <span style={{ color: '#666', fontSize: '0.8rem' }}>Geração de Bagaço, Vinhaça e cinzas de caldeira</span>
+              </div>
+            </div>
+
+            <div style={{ overflow: 'hidden', borderRadius: '16px', border: '1px solid #222', background: '#050505', position: 'relative' }}>
+              <img src="/factory2.png" alt="Reciclagem metal" className="factory-img" style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }} />
+              <div style={{ padding: '16px' }}>
+                <strong style={{ color: '#fff', fontSize: '0.95rem', display: 'block' }}>Complexos Industriais de Reciclagem</strong>
+                <span style={{ color: '#666', fontSize: '0.8rem' }}>Separação e refino de sucata ferrosa e RCC</span>
+              </div>
+            </div>
+
+            <div style={{ overflow: 'hidden', borderRadius: '16px', border: '1px solid #222', background: '#050505', position: 'relative' }}>
+              <img src="/factory3.png" alt="Insumos quimicos" className="factory-img" style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }} />
+              <div style={{ padding: '16px' }}>
+                <strong style={{ color: '#fff', fontSize: '0.95rem', display: 'block' }}>Indústrias Químicas & Fertilizantes</strong>
+                <span style={{ color: '#666', fontSize: '0.8rem' }}>Destinação de cinzas, borras e efluentes tratados</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PERGUNTAS FREQUENTES (FAQ) */}
-      <section id="faq" style={{ padding: '80px 20px', background: '#000', borderBottom: '1px solid #111' }}>
+      <section id="faq" style={{ padding: '80px 20px', background: '#050505', borderBottom: '1px solid #111' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '50px' }}>
@@ -821,7 +902,7 @@ export default function LandingPage({
       {/* FINAL CALL TO ACTION */}
       <section style={{
         padding: '100px 20px',
-        background: 'linear-gradient(180deg, #050505 0%, #000000 100%)',
+        background: 'linear-gradient(180deg, #0a0a0a 0%, #000000 100%)',
         textAlign: 'center',
         borderBottom: '1px solid #111'
       }}>
