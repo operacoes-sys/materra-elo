@@ -1,0 +1,93 @@
+titulo,tipo_anuncio,empresa,papel_empresa,forma_cobranca,categoria,residuo,classe,estado_fisico,quantidade,unidade,frequencia,prazo_recorrencia,acondicionamento,uf,municipio,valor_referencia_rs,unidade_preco,tipo_leilao,observacao
+Sucata ferrosa prensada,Oferta,Metalúrgica - Goiânia,Gerador,Recebo pelo resíduo,Metais,Sucata ferrosa,IIB,Sólido,25,t,Mensal,12 meses,Granel,GO,Goiânia,650,R$/t,Ascendente,Seed - confirmar qtd no contato
+Cavaco de aço com óleo,Oferta,Usinagem - Aparecida,Gerador,Recebo pelo resíduo,Metais,Cavaco metálico,IIB,Sólido,8,t,Mensal,12 meses,Tambor,GO,Aparecida de Goiânia,400,R$/t,Ascendente,Com óleo de corte
+Cobre encapado,Oferta,Manutenção elétrica - Goiânia,Gerador,Recebo pelo resíduo,Metais,Cobre,IIB,Sólido,1.5,t,Mensal,6 meses,Big bag,GO,Goiânia,30000,R$/t,Ascendente,Fios mistos
+Sucata alumínio perfis,Oferta,Indústria automotiva - Anápolis,Gerador,Recebo pelo resíduo,Metais,Alumínio,IIB,Sólido,4,t,Mensal,12 meses,Big bag,GO,Anápolis,6500,R$/t,Ascendente,Perfis e chapas
+Latas de alumínio prensadas,Oferta,Indústria de bebidas - Anápolis,Gerador,Recebo pelo resíduo,Metais,Latas de alumínio,IIB,Sólido,1,t,Semanal,12 meses,Fardo,GO,Anápolis,5500,R$/t,Ascendente,—
+Limalha de fundição,Oferta,Fundição - Goiânia,Gerador,Recebo pelo resíduo,Metais,Limalha,IIB,Sólido,5,t,Mensal,Indefinido,Tambor,GO,Goiânia,500,R$/t,Ascendente,—
+Inox 304 indústria alimentícia,Oferta,Indústria alimentícia - Anápolis,Gerador,Recebo pelo resíduo,Metais,Aço inoxidável (inox),IIB,Sólido,2,t,Mensal,12 meses,Big bag,GO,Anápolis,8500,R$/t,Ascendente,—
+Sucata de perfis estruturais,Oferta,Construção - Goiânia,Gerador,Recebo pelo resíduo,Metais,Sucata ferrosa,IIB,Sólido,10,t,Mensal,6 meses,Granel,GO,Goiânia,620,R$/t,Ascendente,—
+Cabos e fios elétricos,Oferta,Manutenção rodoviária - Itumbiara,Gerador,Recebo pelo resíduo,Metais,Arame e fios,IIB,Sólido,0.8,t,Quinzenal,12 meses,Fardo,GO,Itumbiara,8000,R$/t,Ascendente,—
+Tambores metálicos vazios,Oferta,Frigorífico - Mineiros,Gerador,Recebo pelo resíduo,Metais,Tambores metálicos vazios,IIB,Sólido,200,unidade,Mensal,12 meses,Granel,GO,Mineiros,30,R$/unidade,Ascendente,—
+Filme plástico PEBD,Oferta,Distribuidora - Goiânia,Gerador,Recebo pelo resíduo,Plásticos,PEBD,IIB,Sólido,3,t,Semanal,12 meses,Fardo,GO,Goiânia,1800,R$/t,Ascendente,Limpo e transparente
+Refilo de PP,Oferta,Indústria embalagem - Aparecida,Gerador,Recebo pelo resíduo,Plásticos,PP,IIB,Sólido,5,t,Mensal,12 meses,Big bag,GO,Aparecida de Goiânia,2500,R$/t,Ascendente,—
+Big bags usados limpos,Oferta,Operação logística - Goiânia,Gerador,Recebo pelo resíduo,Plásticos,Big bags usados,IIB,Sólido,500,unidade,Mensal,Indefinido,Granel,GO,Goiânia,2,R$/unidade,Ascendente,—
+PET prensado cor mista,Oferta,Cooperativa - Goiânia,Gerador,Recebo pelo resíduo,Plásticos,PET,IIB,Sólido,6,t,Mensal,6 meses,Fardo,GO,Goiânia,1900,R$/t,Ascendente,—
+PET pós-consumo,Oferta,Engarrafadora - Anápolis,Gerador,Recebo pelo resíduo,Plásticos,PET,IIB,Sólido,3,t,Semanal,12 meses,Fardo,GO,Anápolis,2000,R$/t,Ascendente,—
+Bombonas plásticas 200L,Oferta,Indústria química - Anápolis,Gerador,Recebo pelo resíduo,Plásticos,Embalagens plásticas,IIB,Sólido,300,unidade,Mensal,12 meses,Granel,GO,Anápolis,8,R$/unidade,Ascendente,Tríplice lavagem
+EPS isopor prensado,Oferta,Embalagens - Aparecida,Gerador,Recebo pelo resíduo,Plásticos,EPS (isopor),IIB,Sólido,0.8,t,Mensal,6 meses,Fardo,GO,Aparecida de Goiânia,1500,R$/t,Ascendente,—
+Sucata de PVC,Oferta,Construtora - Goiânia,Gerador,Recebo pelo resíduo,Plásticos,PVC,IIB,Sólido,2.5,t,Mensal,Por obra (3 meses),Big bag,GO,Goiânia,1100,R$/t,Ascendente,Tubos e perfis
+Aparas de papelão prensadas,Oferta,Distribuidor - Goiânia,Gerador,Recebo pelo resíduo,Papel/Papelão,Papelão ondulado,IIB,Sólido,12,t,Semanal,12 meses,Fardo,GO,Goiânia,600,R$/t,Ascendente,—
+Aparas papel branco,Oferta,Gráfica - Goiânia,Gerador,Recebo pelo resíduo,Papel/Papelão,Papel branco/sulfite,IIB,Sólido,2,t,Semanal,12 meses,Fardo,GO,Goiânia,1200,R$/t,Ascendente,—
+Papelão de atacado,Oferta,Atacadista - Anápolis,Gerador,Recebo pelo resíduo,Papel/Papelão,Papelão ondulado,IIB,Sólido,4,t,Quinzenal,12 meses,Fardo,GO,Anápolis,580,R$/t,Ascendente,—
+Aparas de papel mistas,Oferta,Editora - Goiânia,Gerador,Recebo pelo resíduo,Papel/Papelão,Papel misto,IIB,Sólido,3,t,Mensal,6 meses,Fardo,GO,Goiânia,450,R$/t,Ascendente,—
+Embalagem longa vida,Oferta,Cooperativa - Aparecida,Gerador,Recebo pelo resíduo,Papel/Papelão,Embalagem longa vida,IIB,Sólido,1.5,t,Mensal,12 meses,Fardo,GO,Aparecida de Goiânia,500,R$/t,Ascendente,—
+Pallets PBR recuperáveis,Oferta,CD logístico - Goiânia,Gerador,Recebo pelo resíduo,Madeira,Pallets,IIB,Sólido,400,unidade,Mensal,12 meses,Granel,GO,Goiânia,15,R$/unidade,Ascendente,—
+Serragem de madeira,Oferta,Movelaria - Trindade,Gerador,Recebo pelo resíduo,Madeira,Serragem,IIB,Sólido,10,t,Semanal,12 meses,Granel,GO,Trindade,80,R$/t,Ascendente,Seca e limpa
+Aparas de madeira,Oferta,Marcenaria - Goiânia,Gerador,Recebo pelo resíduo,Madeira,Aparas de madeira,IIB,Sólido,3,t,Quinzenal,12 meses,Big bag,GO,Goiânia,60,R$/t,Ascendente,—
+Caixas de madeira,Oferta,Construção - Goiânia,Gerador,Recebo pelo resíduo,Madeira,Caixas de madeira,IIB,Sólido,200,unidade,Mensal,6 meses,Granel,GO,Goiânia,10,R$/unidade,Ascendente,—
+Cacos de vidro cor mista,Oferta,Engarrafadora - Goiânia,Gerador,Recebo pelo resíduo,Vidro,Caco de vidro,IIB,Sólido,7,t,Mensal,12 meses,Caçamba aberta,GO,Goiânia,120,R$/t,Ascendente,—
+Vidro plano de vidraçaria,Oferta,Vidraçaria - Anápolis,Gerador,Recebo pelo resíduo,Vidro,Vidro plano,IIB,Sólido,2,t,Mensal,6 meses,Caçamba aberta,GO,Anápolis,100,R$/t,Ascendente,—
+Garrafas de vidro,Oferta,Bar e restaurante - Goiânia,Gerador,Recebo pelo resíduo,Vidro,Garrafas,IIB,Sólido,1.5,t,Semanal,Indefinido,Caçamba aberta,GO,Goiânia,80,R$/t,Ascendente,—
+Bagaço de cana,Oferta,Usina sucroalcooleira - Quirinópolis,Gerador,Recebo pelo resíduo,Orgânicos,Bagaço,IIA,Sólido,200,t,Recorrente,Safra (8 meses),Granel,GO,Quirinópolis,50,R$/t,Ascendente,Biomassa
+Torta de filtro,Oferta,Usina - Itumbiara,Gerador,Recebo pelo resíduo,Fertilizante/organomineral,Torta de filtro,IIA,Semissólido,150,t,Recorrente,Safra (8 meses),Granel,GO,Itumbiara,40,R$/t,Ascendente,Para fertilizante
+Vinhaça para fertirrigação,Oferta,Usina - Goiatuba,Gerador,Recebo pelo resíduo,Fertilizante/organomineral,Vinhaça,IIA,Líquido,300,m³,Recorrente,Safra (8 meses),Tanque,GO,Goiatuba,0,R$/m³,Ascendente,Doação/troca
+Cama de frango curtida,Oferta,Avicultura - Rio Verde,Gerador,Recebo pelo resíduo,Fertilizante/organomineral,Cama de frango,IIA,Sólido,80,t,Mensal,12 meses (lotes),Granel,GO,Rio Verde,70,R$/t,Ascendente,Para adubo
+Resíduo de abatedouro,Oferta,Frigorífico aves - Mineiros,Gerador,Recebo pelo resíduo,Orgânicos,Resíduo de abatedouro,IIA,Semissólido,25,t,Semanal,12 meses,Caçamba fechada,GO,Mineiros,180,R$/t,Ascendente,Sebo e ossos
+Cama de frango,Oferta,Avicultura - Itaberaí,Gerador,Recebo pelo resíduo,Fertilizante/organomineral,Cama de frango,IIA,Sólido,50,t,Mensal,12 meses,Granel,GO,Itaberaí,65,R$/t,Ascendente,—
+Dejeto suíno líquido,Oferta,Granja suína - Anápolis,Gerador,Recebo pelo resíduo,Pecuária,Dejeto suíno,IIA,Líquido,80,m³,Semanal,12 meses,Tanque,GO,Anápolis,0,R$/m³,Ascendente,Biogás ou fertirrigação
+Esterco de confinamento bovino,Oferta,Confinamento - Catalão,Gerador,Recebo pelo resíduo,Pecuária,Esterco bovino,IIA,Sólido,60,t,Quinzenal,12 meses,Granel,GO,Catalão,50,R$/t,Ascendente,—
+Resíduo orgânico de frigorífico,Oferta,Frigorífico - Goiânia,Gerador,Recebo pelo resíduo,Orgânicos,Resíduo de abatedouro,IIA,Semissólido,30,t,Semanal,12 meses,Caçamba fechada,GO,Goiânia,160,R$/t,Ascendente,—
+Soro de leite,Oferta,Laticínio - Bela Vista de Goiás,Gerador,Recebo pelo resíduo,Orgânicos,Soro de leite,IIA,Líquido,100,m³,Semanal,12 meses,Tanque,GO,Bela Vista de Goiás,80,R$/m³,Ascendente,Para ração ou indústria
+Borra de tinta base solvente,Oferta,Pintura automotiva - Anápolis,Gerador,Pago pela destinação,Químicos,Tintas e borras de tinta,I,Pastoso,2,t,Mensal,12 meses,Tambor,GO,Anápolis,1200,R$/t,Descendente,Perigoso
+Solvente usado contaminado,Oferta,Limpeza industrial - Anápolis,Gerador,Pago pela destinação,Químicos,Solventes,I,Líquido,1.5,m³,Mensal,12 meses,Bombona,GO,Anápolis,1500,R$/m³,Descendente,Classe I
+Óleo lubrificante usado,Oferta,Oficina mecânica - Goiânia,Gerador,Pago pela destinação,Óleos e graxas,Óleo lubrificante usado,I,Líquido,3,m³,Mensal,12 meses,Tambor,GO,Goiânia,0,R$/m³,Descendente,Rerrefino ANP
+Borra oleosa,Oferta,Posto de combustível - Goiânia,Gerador,Pago pela destinação,Óleos e graxas,Borra oleosa,I,Semissólido,4,t,Mensal,Indefinido,Tambor,GO,Goiânia,800,R$/t,Descendente,Caixa SAO
+Lodo galvânico,Oferta,Galvanoplastia - Aparecida,Gerador,Pago pela destinação,Lodos,Lodo galvânico,I,Pastoso,5,t,Mensal,12 meses,Tambor,GO,Aparecida de Goiânia,350,R$/t,Descendente,Metais pesados
+Resíduo de saúde Grupo A,Oferta,Hospital - Goiânia,Gerador,Pago pela destinação,Outros,Resíduo de saúde RSS,I,Sólido,1,t,Semanal,12 meses,Caixa,GO,Goiânia,4,R$/kg,Descendente,RSS Grupo A
+Medicamentos vencidos,Oferta,Farmácia - Goiânia,Gerador,Pago pela destinação,Químicos,Reagentes vencidos,I,Sólido,0.5,t,Mensal,6 meses,Caixa,GO,Goiânia,5,R$/kg,Descendente,Incineração
+Sucata eletrônica (placas),Oferta,TI corporativa - Goiânia,Gerador,Recebo pelo resíduo,Eletrônicos,Placas de circuito,I,Sólido,1,t,Bimestral,12 meses,Caixa,GO,Goiânia,2500,R$/t,Ascendente,REEE
+Equipamentos de telecom obsoletos,Oferta,Telecom - Anápolis,Gerador,Recebo pelo resíduo,Eletrônicos,Componentes eletrônicos,I,Sólido,2,t,Trimestral,12 meses,Caixa,GO,Anápolis,2000,R$/t,Ascendente,—
+PCs descartados,Oferta,Faculdade - Goiânia,Gerador,Recebo pelo resíduo,Eletrônicos,Computadores e notebooks,I,Sólido,50,unidade,Trimestral,Indefinido,Caixa,GO,Goiânia,40,R$/unidade,Ascendente,—
+Pneus inservíveis,Oferta,Recapadora - Goiânia,Gerador,Pago pela destinação,Borracha,Pneus inservíveis,IIB,Sólido,800,unidade,Mensal,12 meses,Granel,GO,Goiânia,0,R$/unidade,Descendente,Coproc. gratuita
+Pneus OTR fora de uso,Oferta,Frota de transporte - Anápolis,Gerador,Pago pela destinação,Borracha,Pneus inservíveis,IIB,Sólido,50,unidade,Mensal,12 meses,Granel,GO,Anápolis,15,R$/unidade,Descendente,OTR pesado
+Aparas de borracha,Oferta,Indústria de borracha - Goiânia,Gerador,Recebo pelo resíduo,Borracha,Aparas de borracha,IIB,Sólido,1,t,Mensal,6 meses,Big bag,GO,Goiânia,300,R$/t,Ascendente,—
+Entulho RCD misto,Oferta,Construtora - Goiânia,Gerador,Pago pela destinação,Construção civil,Entulho misto,IIB,Sólido,50,t,Recorrente,Por obra (6 meses),Caçamba aberta,GO,Goiânia,80,R$/t,Descendente,Classe A predominante
+Resíduo de gesso drywall,Oferta,Drywall - Anápolis,Gerador,Pago pela destinação,Construção civil,Gesso,IIA,Sólido,6,t,Mensal,12 meses,Big bag,GO,Anápolis,150,R$/t,Descendente,—
+Asfalto fresado,Oferta,Pavimentadora - Goiânia,Gerador,Recebo pelo resíduo,Construção civil,Asfalto,IIB,Sólido,20,t,Mensal,6 meses,Granel,GO,Goiânia,40,R$/t,Ascendente,Reciclagem RAP
+Madeira de obra usada,Oferta,Obra civil - Aparecida,Gerador,Recebo pelo resíduo,Madeira,Madeira tratada,IIB,Sólido,8,t,Mensal,Por obra (6 meses),Granel,GO,Aparecida de Goiânia,30,R$/t,Ascendente,—
+Concreto britado,Oferta,Demolição - Goiânia,Gerador,Recebo pelo resíduo,Construção civil,Concreto,IIB,Sólido,80,t,Mensal,4 meses,Granel,GO,Goiânia,25,R$/t,Ascendente,Agregado reciclado
+Lodo de ETE municipal,Oferta,ETE municipal - Goiânia,Gerador,Pago pela destinação,Lodos,Lodo de ETE (efluente),IIA,Semissólido,30,t,Mensal,12 meses,Caçamba fechada,GO,Goiânia,200,R$/t,Descendente,Desaguado
+Lodo industrial têxtil,Oferta,Indústria têxtil - Aparecida,Gerador,Pago pela destinação,Lodos,Lodo industrial,I,Pastoso,10,t,Mensal,12 meses,Tambor,GO,Aparecida de Goiânia,300,R$/t,Descendente,—
+Cinzas de caldeira a biomassa,Oferta,Caldeira biomassa - Jataí,Gerador,Pago pela destinação,Outros,Cinzas de caldeira,IIA,Sólido,20,t,Mensal,12 meses,Big bag,GO,Jataí,100,R$/t,Descendente,—
+Compro cobre,Demanda,Sucatas Edilson,Recicladora,Pago pelo resíduo,Metais,Cobre,IIB,Sólido,2,t,Mensal,12 meses,—,GO,Goiânia,35000,R$/t,Ascendente,Contato comercial público
+Compro sucata ferrosa,Demanda,Sucatas Edilson,Recicladora,Pago pelo resíduo,Metais,Sucata ferrosa,IIB,Sólido,40,t,Mensal,12 meses,—,GO,Goiânia,650,R$/t,Ascendente,—
+Compro sucata de alumínio,Demanda,Sucatas Edilson,Recicladora,Pago pelo resíduo,Metais,Alumínio,IIB,Sólido,5,t,Mensal,12 meses,—,GO,Goiânia,6500,R$/t,Ascendente,—
+Compro plástico PP,Demanda,Aparas Macedo,Recicladora,Pago pelo resíduo,Plásticos,PP,IIB,Sólido,8,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,2500,R$/t,Ascendente,—
+Compro filme PEBD,Demanda,Aparas Macedo,Recicladora,Pago pelo resíduo,Plásticos,PEBD,IIB,Sólido,6,t,Mensal,12 meses,—,GO,Goiânia,1800,R$/t,Ascendente,—
+Compro papelão,Demanda,Reciclagem Goiânia,Recicladora,Pago pelo resíduo,Papel/Papelão,Papelão ondulado,IIB,Sólido,20,t,Semanal,12 meses,—,GO,Goiânia,600,R$/t,Ascendente,—
+Compro ferro e aço,Demanda,Reciclagem Goiânia,Recicladora,Pago pelo resíduo,Metais,Aço,IIB,Sólido,30,t,Mensal,12 meses,—,GO,Goiânia,600,R$/t,Ascendente,—
+Compro latas de alumínio,Demanda,Reciclagem Goiânia,Recicladora,Pago pelo resíduo,Metais,Latas de alumínio,IIB,Sólido,3,t,Semanal,12 meses,—,GO,Goiânia,5500,R$/t,Ascendente,—
+Compro PET pós-consumo,Demanda,Copel Recicláveis,Cooperativa,Pago pelo resíduo,Plásticos,PET,IIB,Sólido,10,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,1900,R$/t,Ascendente,—
+Compro vidro,Demanda,Copel Recicláveis,Cooperativa,Pago pelo resíduo,Vidro,Caco de vidro,IIB,Sólido,15,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,120,R$/t,Ascendente,—
+Compro EPS isopor,Demanda,Copel Recicláveis,Cooperativa,Pago pelo resíduo,Plásticos,EPS (isopor),IIB,Sólido,1,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,1500,R$/t,Ascendente,—
+Compro embalagem longa vida,Demanda,Copel Recicláveis,Cooperativa,Pago pelo resíduo,Papel/Papelão,Embalagem longa vida,IIB,Sólido,3,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,500,R$/t,Ascendente,—
+Compro sucata ferro velho,Demanda,Recicláveis Anápolis,Recicladora,Pago pelo resíduo,Metais,Sucata ferrosa,IIB,Sólido,25,t,Mensal,12 meses,—,GO,Anápolis,620,R$/t,Ascendente,—
+Compro latão,Demanda,Metais São Cristóvão,Recicladora,Pago pelo resíduo,Metais,Latão,IIB,Sólido,3,t,Mensal,12 meses,—,GO,Goiânia,15000,R$/t,Ascendente,—
+Compro bronze,Demanda,Metais São Cristóvão,Recicladora,Pago pelo resíduo,Metais,Bronze,IIB,Sólido,1,t,Mensal,12 meses,—,GO,Goiânia,20000,R$/t,Ascendente,—
+Compro chumbo,Demanda,EMS Sucatas,Recicladora,Pago pelo resíduo,Metais,Chumbo,IIB,Sólido,2,t,Mensal,12 meses,—,GO,Goiânia,8000,R$/t,Ascendente,—
+Compro inox 304,Demanda,Ipiranga Reciclagem,Recicladora,Pago pelo resíduo,Metais,Aço inoxidável (inox),IIB,Sólido,3,t,Mensal,12 meses,—,GO,Goiânia,8500,R$/t,Ascendente,—
+Compro sucata mista,Demanda,Reciclar Brasil,Recicladora,Pago pelo resíduo,Metais,Sucata ferrosa,IIB,Sólido,40,t,Mensal,12 meses,—,GO (estado),—,600,R$/t,Ascendente,Cobertura estadual
+Compro papelão,Demanda,Mj Recicláveis,Recicladora,Pago pelo resíduo,Papel/Papelão,Papelão ondulado,IIB,Sólido,8,t,Semanal,12 meses,—,GO,Aparecida de Goiânia,580,R$/t,Ascendente,—
+Compro plásticos mistos,Demanda,Reciclar Reciclagem,Recicladora,Pago pelo resíduo,Plásticos,PEAD,IIB,Sólido,6,t,Mensal,12 meses,—,GO,Aparecida de Goiânia,1200,R$/t,Ascendente,—
+Recebo Classe I para coprocessamento,Demanda,Votorantim Cimentos - Verdera,Destinadora,Cobro pela destinação,Químicos,Produtos fora de especificação,I,Sólido,50,t,Mensal,24 meses,—,GO,Edealina,900,R$/t,Descendente,Gerador paga
+Recebo borra de tinta,Demanda,Brasil Nutri Ambiental,Destinadora,Cobro pela destinação,Químicos,Tintas e borras de tinta,I,Pastoso,10,t,Mensal,12 meses,—,GO,Goiânia,1200,R$/t,Descendente,Gerador paga
+Recebo lodo industrial,Demanda,Brasil Nutri Ambiental,Destinadora,Cobro pela destinação,Lodos,Lodo industrial,I,Pastoso,20,t,Mensal,12 meses,—,GO,Goiânia,350,R$/t,Descendente,Gerador paga
+Recebo resíduo de saúde,Demanda,Bio Resíduos Ambiental,Destinadora,Cobro pela destinação,Outros,Resíduo de saúde RSS,I,Sólido,2,t,Semanal,12 meses,—,GO,Goiânia,4,R$/kg,Descendente,Gerador paga
+Recebo perigoso para incineração,Demanda,Bio Resíduos Ambiental,Destinadora,Cobro pela destinação,Químicos,Reagentes vencidos,I,Líquido,1,t,Mensal,12 meses,—,GO,Goiânia,5,R$/kg,Descendente,Gerador paga
+Recebo Classe IIA para aterro,Demanda,Goyazes Ambiental,Destinadora,Cobro pela destinação,Outros,Resíduo Classe II diverso,IIA,Sólido,60,t,Mensal,24 meses,—,GO,Goiânia,200,R$/t,Descendente,Gerador paga
+Recebo Classe II industrial,Demanda,Recom Resíduos,Destinadora,Cobro pela destinação,Outros,Resíduo Classe II diverso,IIA,Sólido,80,t,Mensal,24 meses,—,GO,Goiânia,180,R$/t,Descendente,Gerador paga
+Gestão de resíduos industriais,Demanda,RECOL Ambiental,Destinadora,Cobro pela destinação,Outros,Resíduo Classe II diverso,IIA,Sólido,40,t,Mensal,12 meses,—,GO,Goiânia,200,R$/t,Descendente,Gestão total
+Compro torta de filtro,Demanda,Indústria de fertilizante organomineral,Comprador industrial,Pago pelo resíduo,Fertilizante/organomineral,Torta de filtro,IIA,Semissólido,200,t,Recorrente,Safra (8 meses),—,GO,Rio Verde,80,R$/t,Ascendente,Feedstock
+Compro resíduo de abatedouro,Demanda,Graxaria regional,Comprador industrial,Pago pelo resíduo,Orgânicos,Resíduo de abatedouro,IIA,Semissólido,30,t,Semanal,12 meses,—,GO,Mineiros,200,R$/t,Ascendente,Sebo e farinha
+Recebo pneus para coprocessamento,Demanda,Votorantim Cimentos - Verdera,Destinadora,Pago pelo resíduo,Borracha,Pneus inservíveis,IIB,Sólido,1000,unidade,Mensal,24 meses,—,GO,Edealina,0,R$/unidade,Sem leilão,Combustível alternativo

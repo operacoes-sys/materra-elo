@@ -1,0 +1,18 @@
+with open('src/app/page.tsx', 'r') as f:
+    lines = f.readlines()
+
+print("Line 3070:", lines[3069])
+print("Line 3071:", lines[3070])
+print("Line 3072:", lines[3071])
+print("Line 3073:", lines[3072])
+print("Line 3074:", lines[3073])
+print("...")
+print("Line 3120:", lines[3119])
+print("Line 3121:", lines[3120])
+print("Line 3122:", lines[3121])
+print("...")
+print("Line 3505:", lines[3504])
+print("Line 3506:", lines[3505])
+print("Line 3507:", lines[3506])
+print("Line 3508:", lines[3507])
+print("Line 3509:", lines[3508])

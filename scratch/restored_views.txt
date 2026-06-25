@@ -1,0 +1,209 @@
+=== Step 12623 ===
+Created At: 2026-06-24T01:53:48Z
+Completed At: 2026-06-24T01:53:48Z
+File Path: `file:///Users/lucassouto/Documents/MATERRAELO-ANTIGRAVITY/src/app/page.tsx`
+Total Lines: 5690
+Total Bytes: 292892
+Showing lines 3400 to 3480
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3400:                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
+3401:                               {/* Left: Role Filter (if Dupla Habilitação) */}
+3402:                               {isDuplaAptidao ? (
+3403:                                 <div style={{ display: 'flex', gap: '8px' }}>
+3404:                                   <button
+3405:                                     onClick={() => setMyNegociosSubFilter('oferta')}
+3406:                                     style={{
+3407:                                       padding: '8px 16px',
+3408:                                       borderRadius: '4px',
+3409:                                       fontSize: '0.8rem',
+3410:                                       fontWeight: 'bold',
+3411:                                       cursor: 'pointer',
+3412:                                       background: myNegociosSubFilter === 'oferta' ? 'var(--primary-500)' : '#1c1c1c',
+3413:                                       color: myNegociosSubFilter === 'oferta' ? '#000' : '#aaa',
+3414:                                       border: myNegociosSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+3415:                                     }}
+3416:                                   >
+3417:                                     Negócios de Ofertas
+3418:                                   </button>
+3419:                                   <button
+3420:                                     onClick={() => setMyNegociosSubFilter('demanda')}
+3421:                                     style={{
+3422:                                       padding: '8px 16px',
+3423:                                       borderRadius: '4px',
+3424:                                       fontSize: '0.8rem',
+3425:                                       fontWeight: 'bold',
+3426:                                       cursor: 'pointer',
+3427:                                       background: myNegociosSubFilter === 'demanda' ? 'var(--primary-500)' : '#1c1c1c',
+3428:                                       color: myNegociosSubFilter === 'demanda' ? '#000' : '#aaa',
+3429:                                       border: myNegociosSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+3430:                                     }}
+3431:                                   >
+3432:                                     Negócios de Demandas
+3433:                                   </button>
+3434:                                 </div>
+3435:                               ) : <div />}
+3436: 
+3437:                               {/* Right: Section Switch (Contatos / Auditoria) */}
+3438:                               <div style={{ display: 'flex', gap: '8px' }}>
+3439:                                 <button
+3440:                                   onClick={() => setNegociosView('contatos')}
+3441:                                   style={{
+3442:                                     padding: '8px 16px',
+3443:                                     borderRadius: '4px',
+3444:                                     fontSize: '0.8rem',
+3445:                                     fontWeight: 'bold',
+3446:                                     cursor: 'pointer',
+3447:                                     background: negociosView === 'contatos' ? 'var(--primary-500)' : '#1c1c1c',
+3448:                                     color: negociosView === 'contatos' ? '#000' : '#aaa',
+3449:                                     border: negociosView === 'contatos' ? '1px solid var(--primary-500)' : '1px solid #333'
+3450:                                   }}
+3451:                                 >
+3452:                                   Contatos Liberados
+3453:                                 </button>
+3454:                                 <button
+3455:                                   onClick={() => setNegociosView('auditoria')}
+3456:                                   style={{
+3457:                                     padding: '8px 16px',
+3458:                                     borderRadius: '4px',
+3459:                                     fontSize: '0.8rem',
+3460:                                     fontWeight: 'bold',
+3461:                                     cursor: 'pointer',
+3462:                                     background: negociosView === 'auditoria' ? 'var(--primary-500)' : '#1c1c1c',
+3463:                                     color: negociosView === 'auditoria' ? '#000' : '#aaa',
+3464:                                     border: negociosView === 'auditoria' ? '1px solid var(--primary-500)' : '1px solid #333'
+3465:                                   }}
+3466:                                 >
+3467:                                   Transações & Auditoria
+3468:                                 </button>
+3469:                               </div>
+3470:                             </div>
+3471: 
+3472:                             {/* 2.1 Contatos & Transportadoras Liberados View */}
+3473:                             {negociosView === 'contatos' && (
+3474:                               <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+3475:                                 <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+3476:                                   Contatos & Transportadoras Liberados
+3477:                                 </h4>
+3478: 
+3479:                                 {loadingContacts ? (
+3480:                                   <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=== Step 12625 ===
+Created At: 2026-06-24T01:53:52Z
+Completed At: 2026-06-24T01:53:52Z
+File Path: `file:///Users/lucassouto/Documents/MATERRAELO-ANTIGRAVITY/src/app/page.tsx`
+Total Lines: 5690
+Total Bytes: 292892
+Showing lines 3470 to 3575
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3470:                             </div>
+3471: 
+3472:                             {/* 2.1 Contatos & Transportadoras Liberados View */}
+3473:                             {negociosView === 'contatos' && (
+3474:                               <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+3475:                                 <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+3476:                                   Contatos & Transportadoras Liberados
+3477:                                 </h4>
+3478: 
+3479:                                 {loadingContacts ? (
+3480:                                   <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+3481:                                 ) : filteredGrouped.length === 0 ? (
+3482:                                   <div style={{ textAlign: 'center', padding: '30px', border: '1px dashed #333', borderRadius: '8px' }}>
+3483:                                     <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+3484:                                       {isDuplaAptidao 
+3485:                                         ? `Nenhum contato liberado para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+3486:                                         : 'Nenhum contato liberado até o momento.'
+3487:                                       }
+3488:                                     </p>
+3489:                                   </div>
+3490:                                 ) : (
+3491:                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+3492:                                     {filteredGrouped.map((group: any, idx: number) => {
+3493:                                       const an = group.anuncio
+3494:                                       return (
+3495:                                         <div key={idx} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+3496:                                           {/* Ad Header */}
+3497:                                           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+3498:                                             <div>
+3499:                                               <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Operação Concluída</span>
+3500:                                               <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 'bold', marginTop: '2px' }}>
+3501:                                                 [{an.codigo || 'N/A'}] {an.residuo || 'Resíduo'}
+3502:                                               </h4>
+3503:                                               <span style={{ fontSize: '0.75rem', color: '#888' }}>
+3504:                                                 Qtd: {an.quantidade} {an.unidade} • Categoria: {an.categoria || 'Geral'}
+3505:                                               </span>
+3506:                                             </div>
+3507:                                             <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#aaa' }}>
+3508:                                               {group.valor_index > 0 && <div>Materra Index: R$ {group.valor_index.toLocaleString('pt-BR')}</div>}
+3509:                                               {group.valor_real > 0 && <div style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>Valor Fechado: R$ {group.valor_real.toLocaleString('pt-BR')}</div>}
+3510:                                               {group.premiacao_percent > 0 && <div style={{ color: '#25D366' }}>Economia: {group.premiacao_percent}%</div>}
+3511:                                             </div>
+3512:                                           </div>
+3513: 
+3514:                                           {/* Contacts info grid */}
+3515:                                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+3516:                                             {/* Counterparties */}
+3517:                                             <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+3518:                                               <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+3519:                                                 Contato da Contraparte
+3520:                                               </h5>
+3521:                                               {group.contrapartes.length === 0 ? (
+3522:                                                 <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhum contato de contraparte.</p>
+3523:                                               ) : (
+3524:                                                 group.contrapartes.map((cp: any, cpIdx: number) => (
+3525:                                                   <div key={cpIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+3526:                                                     <strong>Razão Social:</strong> {cp.nome_ou_razao}<br />
+3527:                                                     <strong>CNPJ/CPF:</strong> {cp.cpf_ou_cnpj}<br />
+3528:                                                     <strong>E-mail:</strong> {cp.email}<br />
+3529:                                                     <strong>WhatsApp:</strong> {cp.whatsapp || cp.telefone || 'Não informado'}
+3530:                                                   </div>
+3531:                                                 ))
+3532:                                               )}
+3533:                                             </div>
+3534: 
+3535:                                             {/* Carrier (optional) */}
+3536:                                             <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+3537:                                               <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+3538:                                                 Transportadora do Lote
+3539:                                               </h5>
+3540:                                               {group.transportadoras.length === 0 ? (
+3541:                                                 <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhuma transportadora contratada por leilão reverso.</p>
+3542:                                               ) : (
+3543:                                                 group.transportadoras.map((tp: any, tIdx: number) => (
+3544:                                                   <div key={tIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+3545:                                                     <strong>Razão Social:</strong> {tp.nome_ou_razao}<br />
+3546:                                                     <strong>ANTT/CNPJ:</strong> {tp.cpf_ou_cnpj || tp.rntrc_num || 'N/A'}<br />
+3547:                                                     <strong>WhatsApp:</strong> {tp.whatsapp || tp.telefone || 'Não informado'}
+3548:                                                   </div>
+3549:                                                 ))
+3550:                                               )}
+3551:                                             </div>
+3552:                                           </div>
+3553:                                         </div>
+3554:                                       );
+3555:                                     })}
+3556:                                   </div>
+3557:                                 )}
+3558:                               </div>
+3559:                             )}
+3560: 
+3561:                             {/* 2.2 Transações Homologadas e Rastreabilidade View */}
+3562:                             {negociosView === 'auditoria' && (
+3563:                               <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+3564:                                 <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+3565:                                   CONTATOS/HISTORICO/AUDIT TRAIL
+3566:                                 </h4>
+3567:                                 {loadingAudit ? (
+3568:                                   <p style={{ color: '#888', fontSize: '0.8rem' }}>Buscando histórico...</p>
+3569:                                 ) : filteredAuditLogs.length === 0 ? (
+3570:                                   <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>
+3571:                                     {isDuplaAptidao 
+3572:                                       ? `Nenhuma transação fechada e auditada para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+3573:                                       : 'Nenhuma transação fechada e auditada ainda.'
+3574:                                     }
+3575:                                   </p>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+

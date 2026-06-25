@@ -1,0 +1,1362 @@
+### STEP 12463: replace_file_content ###
+StartLine: 1289 | EndLine: 1291
+--- TARGET CONTENT ---
+  const [myListingsSubFilter, setMyListingsSubFilter] = useState<'oferta' | 'demanda'>('oferta')
+  const [myNegociosSubFilter, setMyNegociosSubFilter] = useState<'oferta' | 'demanda'>('oferta')
+--- REPLACEMENT CONTENT ---
+  const [myListingsSubFilter, setMyListingsSubFilter] = useState<'oferta' | 'demanda'>('oferta')
+  const [myNegociosSubFilter, setMyNegociosSubFilter] = useState<'oferta' | 'demanda'>('oferta')
+  const [geralSubTab, setGeralSubTab] = useState<'anuncios' | 'negocios'>('anuncios')
+############################
+
+### STEP 12473: replace_file_content ###
+StartLine: 3113 | EndLine: 3557
+--- TARGET CONTENT ---
+                {/* SECTION: MEUS ANÚNCIOS */}
+                {profile.tipo_parte !== 'Transportadora' && (() => {
+                  const isDuplaAptidao = profile.tipo_parte === 'Fornecedor / Comprador' || profile.tipo_parte === 'Fornecedor e Comprador';
+                  const filteredListings = myListings.filter(item => {
+                    if (!isDuplaAptidao) return true;
+                    const isOferta = item.tipo_anuncio?.toLowerCase().includes('oferta');
+                    return myListingsSubFilter === 'oferta' ? isOferta : !isOferta;
+                  });
+
+                  return (
+                    <div style={{ background: '#121212', border: '1px solid #222', borderRadius: '8px', padding: '24px', marginBottom: '30px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                        <div>
+                          <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>Seus Anúncios Publicados</h3>
+                          <p style={{ color: '#888', fontSize: '0.8rem' }}>Visualize métricas de performance e status dos seus lotes de resíduos</p>
+                        </div>
+                        <Link href="/anuncios/publicar" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: '#000', fontWeight: 'bold' }}>
+                          Publicar Novo Anúncio
+                        </Link>
+                      </div>
+
+                      {/* Sub-selector for Dupla Habilitação */}
+                      {isDuplaAptidao && (
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                          <button
+                            onClick={() => setMyListingsSubFilter('oferta')}
+                            style={{
+                              padding: '8px 16px',
+                              borderRadius: '4px',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              background: myListingsSubFilter === 'oferta' ? 'var(--primary-500)' : '#1c1c1c',
+                              color: myListingsSubFilter === 'oferta' ? '#000' : '#aaa',
+                              border: myListingsSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                            }}
+                          >
+                            Ofertas (Venda)
+                          </button>
+                          <button
+                            onClick={() => setMyListingsSubFilter('demanda')}
+                            style={{
+                              padding: '8px 16px',
+                              borderRadius: '4px',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              background: myListingsSubFilter === 'demanda' ? 'var(--primary-500)' : '#1c1c1c',
+                              color: myListingsSubFilter === 'demanda' ? '#000' : '#aaa',
+                              border: myListingsSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                            }}
+                          >
+                            Demandas (Compra)
+                          </button>
+                        </div>
+                      )}
+
+                      {loadingMyListings ? (
+                        <p style={{ color: '#888', fontSize: '0.85rem' }}>Carregando seus anúncios...</p>
+                      ) : filteredListings.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px' }}>
+                          <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '12px' }}>
+                            {isDuplaAptidao 
+                              ? `Você ainda não possui anúncios publicados como ${myListingsSubFilter === 'oferta' ? 'Oferta (Fornecedor)' : 'Demanda (Comprador)'}.`
+                              : 'Você ainda não publicou nenhum anúncio.'
+                            }
+                          </p>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          {filteredListings.map(item => (
+                            <div 
+                              key={item.id} 
+                              style={{ 
+                                background: '#1c1c1c', 
+                                border: activeMyListingId === item.id ? '1px solid var(--primary-500)' : '1px solid #333', 
+                                padding: '16px', 
+                                borderRadius: '8px', 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                gap: '16px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => setActiveMyListingId(activeMyListingId === item.id ? null : item.id)}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                <div>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                                    <strong style={{ color: '#fff', fontSize: '1rem' }}>{item.residuo}</strong>
+                                    <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,215,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                      {item.codigo}
+                                    </span>
+                                    <span style={{
+                                      padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold',
+                                      background: item.status === 'Anunciado' ? 'rgba(67,160,71,0.1)' : 'rgba(255,167,38,0.1)',
+                                      color: item.status === 'Anunciado' ? 'var(--primary-400)' : 'var(--warning)'
+                                    }}>
+                                      {item.status || 'Pendente'}
+                                    </span>
+                                  </div>
+                                  <p style={{ color: '#aaa', fontSize: '0.8rem', margin: 0 }}>
+                                    Tipo: {item.tipo_anuncio} • Categoria: {item.categoria} • Quantidade: {item.quantidade} {item.unidade}
+                                  </p>
+                                  <p style={{ color: '#aaa', fontSize: '0.8rem', marginTop: '4px', marginBottom: 0 }}>
+                                    Valor Desejado: R$ {item.valor_desejado?.toLocaleString('pt-BR')} • Publicado em: {new Date(item.data_publicacao).toLocaleDateString('pt-BR')}
+                                  </p>
+                                </div>
+                                
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }} onClick={e => e.stopPropagation()}>
+                                  <button
+                                    onClick={() => toggleListingActiveStatus(item)}
+                                    className="btn"
+                                    style={{
+                                      padding: '8px 12px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      background: (item.status === 'Inativo' || item.status === 'Suspenso') ? '#2e7d32' : '#c62828',
+                                      color: '#fff',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    {(item.status === 'Inativo' || item.status === 'Suspenso') ? 'Reativar' : 'Suspender'}
+                                  </button>
+
+                                  {/* EXPANSIONS COUNTER CARD */}
+                                  <div style={{
+                                    background: '#0d0d0d', border: '1px solid #222', padding: '10px 16px', borderRadius: '8px',
+                                    textAlign: 'center', minWidth: '150px'
+                                  }}>
+                                    <span style={{ fontSize: '0.65rem', color: '#777', textTransform: 'uppercase', display: 'block', fontWeight: 'bold' }}>
+                                      Visualizações Pró
+                                    </span>
+                                    <strong style={{ fontSize: '1.4rem', color: 'var(--primary-500)', display: 'block', margin: '2px 0' }}>
+                                      {item.leads_expandidos_plano || 0}
+                                    </strong>
+                                    <span style={{ fontSize: '0.65rem', color: '#555', display: 'block', maxWidth: '140px', margin: '0 auto', lineHeight: '1.2' }}>
+                                      Usuários ProAtiva que expandiram o anúncio
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {activeMyListingId === item.id && (
+                                <div style={{ borderTop: '1px solid #333', paddingTop: '16px', marginTop: '4px' }} onClick={e => e.stopPropagation()}>
+                                  <h4 style={{ color: 'var(--primary-500)', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    Anúncios Recomendados para Match (Oportunidades Contrárias)
+                                  </h4>
+                                  {(() => {
+                                    const isItemOferta = item.tipo_anuncio?.toLowerCase().includes('oferta')
+                                    const matches = listings
+                                      .filter(l => {
+                                        if (l.id === item.id) return false
+                                        if (l.status !== 'Anunciado') return false
+                                        if (l.categoria !== item.categoria) return false
+                                        const isLOferta = l.tipo_anuncio?.toLowerCase().includes('oferta')
+                                        return isItemOferta !== isLOferta
+                                      })
+                                      .sort((a, b) => {
+                                        const distA = getDistanceBetweenCeps(item.cep || '74000-000', a.cep || '75000-000')
+                                        const distB = getDistanceBetweenCeps(item.cep || '74000-000', b.cep || '75000-000')
+                                        return distB - distA
+                                      })
+
+                                    if (matches.length === 0) {
+                                      return (
+                                        <p style={{ color: '#777', fontSize: '0.8rem', fontStyle: 'italic', margin: 0 }}>
+                                          Nenhum anúncio contrário ativo para match no momento.
+                                        </p>
+                                      )
+                                    }
+
+                                    return (
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                                        {matches.map(m => (
+                                          <div 
+                                            key={m.id} 
+                                            onClick={() => handleListingClick(m)}
+                                            style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'border-color 0.2s' }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary-500)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
+                                          >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                              <span style={{ fontSize: '0.65rem', color: '#ffb300', fontWeight: 'bold' }}>CONFIDENCIAL</span>
+                                              <span style={{ fontSize: '0.65rem', background: '#222', color: '#aaa', padding: '2px 6px', borderRadius: '4px' }}>
+                                                {m.codigo}
+                                              </span>
+                                            </div>
+                                            <h5 style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', margin: '0 0 4px 0' }}>{m.residuo}</h5>
+                                            <p style={{ color: '#aaa', fontSize: '0.75rem', margin: 0 }}>
+                                              Qtd: {m.quantidade} {m.unidade} • Disponível a {getDistanceBetweenCeps(item.cep || '74000-000', m.cep || '75000-000')} km de você
+                                            </p>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.75rem', borderTop: '1px solid #1a1a1a', paddingTop: '6px' }}>
+                                              <span style={{ color: '#666' }}>Valor: R$ {m.valor_desejado}</span>
+                                              <span style={{ color: 'var(--primary-500)' }}>Materra Index: R$ {m.valor_index || 'Calculando...'}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* SECTION: MEUS NEGÓCIOS */}
+                {(() => {
+                  const isDuplaAptidao = profile.tipo_parte === 'Fornecedor / Comprador' || profile.tipo_parte === 'Fornecedor e Comprador';
+                  
+                  const grouped = releasedContacts.reduce((acc: any, c: any) => {
+                    const adId = c.id_anuncio || 'sem_anuncio'
+                    if (!acc[adId]) {
+                      acc[adId] = {
+                        anuncio: c.anuncio || { codigo: 'N/A', residuo: 'Desconhecido' },
+                        contrapartes: [],
+                        transportadoras: [],
+                        valor_index: c.valor_index,
+                        valor_real: c.valor_real,
+                        premiacao_percent: c.premiacao_percent,
+                        data_liberacao: c.data_liberacao
+                      }
+                    }
+                    if (c.contraparte) {
+                      if (c.contraparte.tipo_parte === 'Transportadora') {
+                        acc[adId].transportadoras.push(c.contraparte)
+                      } else {
+                        acc[adId].contrapartes.push(c.contraparte)
+                      }
+                    }
+                    return acc;
+                  }, {});
+
+                  const filteredGrouped = Object.values(grouped).filter((group: any) => {
+                    if (!isDuplaAptidao) return true;
+                    const isOferta = group.anuncio?.tipo_anuncio?.toLowerCase().includes('oferta');
+                    return myNegociosSubFilter === 'oferta' ? isOferta : !isOferta;
+                  });
+
+                  const filteredAuditLogs = auditLogs.filter((log: any) => {
+                    if (!isDuplaAptidao) return true;
+                    const isOferta = log.anuncio_cad?.tipo_anuncio?.toLowerCase().includes('oferta');
+                    return myNegociosSubFilter === 'oferta' ? isOferta : !isOferta;
+                  });
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {/* 1. Contatos & Transportadoras Liberados */}
+                      <div style={{ background: '#121212', border: '1px solid #222', borderRadius: '8px', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                          <div>
+                            <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                              Contatos & Transportadoras Liberados (Meus Negócios)
+                            </h3>
+                            <p style={{ color: '#888', fontSize: '0.8rem' }}>
+                              Abaixo estão os contatos e transportadoras liberados para cada anúncio arrematado.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Sub-selector for Dupla Habilitação */}
+                        {isDuplaAptidao && (
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                            <button
+                              onClick={() => setMyNegociosSubFilter('oferta')}
+                              style={{
+                                padding: '8px 16px',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                background: myNegociosSubFilter === 'oferta' ? 'var(--primary-500)' : '#1c1c1c',
+                                color: myNegociosSubFilter === 'oferta' ? '#000' : '#aaa',
+                                border: myNegociosSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                              }}
+                            >
+                              Negócios de Ofertas
+                            </button>
+                            <button
+                              onClick={() => setMyNegociosSubFilter('demanda')}
+                              style={{
+                                padding: '8px 16px',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                background: myNegociosSubFilter === 'demanda' ? 'var(--primary-500)' : '#1c1c1c',
+                                color: myNegociosSubFilter === 'demanda' ? '#000' : '#aaa',
+                                border: myNegociosSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                              }}
+                            >
+                              Negócios de Demandas
+                            </button>
+                          </div>
+                        )}
+
+                        {loadingContacts ? (
+                          <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+                        ) : filteredGrouped.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px', border: '1px dashed #333', borderRadius: '8px' }}>
+                            <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+                              {isDuplaAptidao 
+                                ? `Nenhum contato liberado para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                : 'Nenhum contato liberado até o momento para suas negociações.'
+                              }
+                            </p>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {filteredGrouped.map((group: any, idx: number) => {
+                              const an = group.anuncio
+                              return (
+                                <div key={idx} style={{ background: '#1c1c1c', border: '1px solid #333', padding: '20px', borderRadius: '8px' }}>
+                                  {/* Ad Header */}
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div>
+                                      <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Operação Concluída</span>
+                                      <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginTop: '2px' }}>
+                                        [{an.codigo || 'N/A'}] {an.residuo || 'Resíduo'}
+                                      </h4>
+                                      <span style={{ fontSize: '0.8rem', color: '#888' }}>
+                                        Qtd: {an.quantidade} {an.unidade} • Categoria: {an.categoria || 'Geral'}
+                                      </span>
+                                    </div>
+                                    <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#aaa' }}>
+                                      {group.valor_index > 0 && <div>Materra Index: R$ {group.valor_index.toLocaleString('pt-BR')}</div>}
+                                      {group.valor_real > 0 && <div style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>Valor Fechado: R$ {group.valor_real.toLocaleString('pt-BR')}</div>}
+                                      {group.premiacao_percent > 0 && <div style={{ color: '#25D366' }}>Economia: {group.premiacao_percent}%</div>}
+                                    </div>
+                                  </div>
+
+                                  {/* Contacts info grid */}
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                                    {/* Counterparties */}
+                                    <div style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '6px' }}>
+                                      <h5 style={{ color: 'var(--primary-500)', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '12px' }}>
+                                        Contato da Contraparte
+                                      </h5>
+                                      {group.contrapartes.length === 0 ? (
+                                        <p style={{ color: '#666', fontSize: '0.8rem' }}>Nenhum contato de contraparte.</p>
+                                      ) : (
+                                        group.contrapartes.map((cp: any, cpIdx: number) => (
+                                          <div key={cpIdx} style={{ fontSize: '0.85rem', color: '#ccc', lineHeight: '1.6' }}>
+                                            <strong>Razão Social:</strong> {cp.nome_ou_razao}<br />
+                                            <strong>CNPJ/CPF:</strong> {cp.cpf_ou_cnpj}<br />
+                                            <strong>E-mail:</strong> {cp.email}<br />
+                                            <strong>WhatsApp:</strong> {cp.whatsapp || cp.telefone || 'Não informado'}
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+
+                                    {/* Carrier (optional) */}
+                                    <div style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '6px' }}>
+                                      <h5 style={{ color: 'var(--primary-500)', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '12px' }}>
+                                        Transportadora do Lote
+                                      </h5>
+                                      {group.transportadoras.length === 0 ? (
+                                        <p style={{ color: '#666', fontSize: '0.8rem' }}>Nenhuma transportadora contratada por leilão reverso.</p>
+                                      ) : (
+                                        group.transportadoras.map((tp: any, tIdx: number) => (
+                                          <div key={tIdx} style={{ fontSize: '0.85rem', color: '#ccc', lineHeight: '1.6' }}>
+                                            <strong>Razão Social:</strong> {tp.nome_ou_razao}<br />
+                                            <strong>ANTT/CNPJ:</strong> {tp.cpf_ou_cnpj || tp.rntrc_num || 'N/A'}<br />
+                                            <strong>WhatsApp:</strong> {tp.whatsapp || tp.telefone || 'Não informado'}
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. Transações Homologadas e Rastreabilidade (Audit Trail Privado) */}
+                      <div style={{ background: '#121212', border: '1px solid #222', borderRadius: '8px', padding: '24px' }}>
+                        <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                          Transações Homologadas e Rastreabilidade (Audit Trail Privado)
+                        </h3>
+                        {loadingAudit ? (
+                          <p style={{ color: '#888', fontSize: '0.8rem' }}>Buscando histórico...</p>
+                        ) : filteredAuditLogs.length === 0 ? (
+                          <p style={{ color: '#666', fontSize: '0.8rem' }}>
+                            {isDuplaAptidao 
+                              ? `Nenhuma transação fechada e auditada para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                              : 'Nenhuma transação fechada e auditada ainda.'
+                            }
+                          </p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {filteredAuditLogs.map(log => (
+                              <div key={log.id} style={{ background: '#1c1c1c', border: '1px solid #333', padding: '16px', borderRadius: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1px solid #2a2a2a', paddingBottom: '8px', marginBottom: '8px' }}>
+                                  <span style={{ color: 'var(--primary-500)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                    MTR: {log.mtr_numero || 'Pendente'} | CDF: {log.cdf_numero || 'Pendente'}
+                                  </span>
+                                  <span style={{ color: '#777', fontSize: '0.8rem' }}>
+                                    {new Date(log.data_hora).toLocaleDateString('pt-BR')}
+                                  </span>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.85rem' }}>
+                                  <div>
+                                    <strong style={{ color: '#aaa', display: 'block' }}>Resíduo:</strong>
+                                    <span style={{ color: '#fff' }}>{log.anuncio_cad?.residuo || 'Mapeado'} (Cod: {log.anuncio_cad?.codigo || 'N/A'})</span>
+                                  </div>
+                                  <div>
+                                    <strong style={{ color: '#aaa', display: 'block' }}>Partes Envolvidas:</strong>
+                                    <span style={{ color: '#fff' }}>
+                                      Fornecedor: {log.fornecedor_cad?.nome_ou_razao || 'N/A'}<br />
+                                      Comprador: {log.comprador_cad?.nome_ou_razao || 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <strong style={{ color: '#aaa', display: 'block' }}>Valores Registrados:</strong>
+                                    <span style={{ color: '#fff' }}>
+                                      Resíduo: R$ {log.valor_residuo_rs?.toLocaleString('pt-BR') || '0'}<br />
+                                      Frete: R$ {log.valor_frete_rs?.toLocaleString('pt-BR') || '0'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <strong style={{ color: '#aaa', display: 'block' }}>Classificação de Segurança:</strong>
+                                    <span style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>
+                                      Audit: {log.nivel_audit}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+--- REPLACEMENT CONTENT ---
+                {/* UNIFIED DASHBOARD SECTION: SWITCH BETWEEN MY LISTINGS AND MY BUSINESS */}
+                {(() => {
+                  const isDuplaAptidao = profile.tipo_parte === 'Fornecedor / Comprador' || profile.tipo_parte === 'Fornecedor e Comprador';
+                  const activeSubTab = isCarrierUser ? 'negocios' : geralSubTab;
+
+                  return (
+                    <div style={{ background: '#121212', border: '1px solid #222', borderRadius: '8px', padding: '24px', marginBottom: '30px' }}>
+                      {/* Sub-navigation Switch Header */}
+                      {!isCarrierUser && (
+                        <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid #222', marginBottom: '20px', paddingBottom: '8px' }}>
+                          <button
+                            onClick={() => setGeralSubTab('anuncios')}
+                            style={{
+                              padding: '8px 16px', background: 'none', border: 'none',
+                              color: activeSubTab === 'anuncios' ? 'var(--primary-500)' : '#aaa',
+                              borderBottom: activeSubTab === 'anuncios' ? '2px solid var(--primary-500)' : '2px solid transparent',
+                              fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s'
+                            }}
+                          >
+                            Meus Anúncios ({myListings.length})
+                          </button>
+                          <button
+                            onClick={() => setGeralSubTab('negocios')}
+                            style={{
+                              padding: '8px 16px', background: 'none', border: 'none',
+                              color: activeSubTab === 'negocios' ? 'var(--primary-500)' : '#aaa',
+                              borderBottom: activeSubTab === 'negocios' ? '2px solid var(--primary-500)' : '2px solid transparent',
+                              fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s'
+                            }}
+                          >
+                            Meus Negócios
+                          </button>
+                        </div>
+                      )}
+
+                      {/* 1. MEUS ANÚNCIOS CONTENT */}
+                      {activeSubTab === 'anuncios' && (() => {
+                        const filteredListings = myListings.filter(item => {
+                          if (!isDuplaAptidao) return true;
+                          const isOferta = item.tipo_anuncio?.toLowerCase().includes('oferta');
+                          return myListingsSubFilter === 'oferta' ? isOferta : !isOferta;
+                        });
+
+                        return (
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                              <div>
+                                <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>Seus Anúncios Publicados</h3>
+                                <p style={{ color: '#888', fontSize: '0.8rem' }}>Visualize métricas de performance e status dos seus lotes de resíduos</p>
+                              </div>
+                              <Link href="/anuncios/publicar" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', color: '#000', fontWeight: 'bold' }}>
+                                Publicar Novo Anúncio
+                              </Link>
+                            </div>
+
+                            {/* Sub-selector for Dupla Habilitação */}
+                            {isDuplaAptidao && (
+                              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                <button
+                                  onClick={() => setMyListingsSubFilter('oferta')}
+                                  style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    background: myListingsSubFilter === 'oferta' ? 'var(--primary-500)' : '#1c1c1c',
+                                    color: myListingsSubFilter === 'oferta' ? '#000' : '#aaa',
+                                    border: myListingsSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                  }}
+                                >
+                                  Ofertas (Venda)
+                                </button>
+                                <button
+                                  onClick={() => setMyListingsSubFilter('demanda')}
+                                  style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    background: myListingsSubFilter === 'demanda' ? 'var(--primary-500)' : '#1c1c1c',
+                                    color: myListingsSubFilter === 'demanda' ? '#000' : '#aaa',
+                                    border: myListingsSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                  }}
+                                >
+                                  Demandas (Compra)
+                                </button>
+                              </div>
+                            )}
+
+                            {loadingMyListings ? (
+                              <p style={{ color: '#888', fontSize: '0.85rem' }}>Carregando seus anúncios...</p>
+                            ) : filteredListings.length === 0 ? (
+                              <div style={{ textAlign: 'center', padding: '40px' }}>
+                                <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '12px' }}>
+                                  {isDuplaAptidao 
+                                    ? `Você ainda não possui anúncios publicados como ${myListingsSubFilter === 'oferta' ? 'Oferta (Fornecedor)' : 'Demanda (Comprador)'}.`
+                                    : 'Você ainda não publicou nenhum anúncio.'
+                                  }
+                                </p>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {filteredListings.map(item => (
+                                  <div 
+                                    key={item.id} 
+                                    style={{ 
+                                      background: '#1c1c1c', 
+                                      border: activeMyListingId === item.id ? '1px solid var(--primary-500)' : '1px solid #333', 
+                                      padding: '16px', 
+                                      borderRadius: '8px', 
+                                      display: 'flex', 
+                                      flexDirection: 'column', 
+                                      gap: '16px',
+                                      cursor: 'pointer'
+                                    }}
+                                    onClick={() => setActiveMyListingId(activeMyListingId === item.id ? null : item.id)}
+                                  >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                      <div>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                                          <strong style={{ color: '#fff', fontSize: '1rem' }}>{item.residuo}</strong>
+                                          <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,215,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                            {item.codigo}
+                                          </span>
+                                          <span style={{
+                                            padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold',
+                                            background: item.status === 'Anunciado' ? 'rgba(67,160,71,0.1)' : 'rgba(255,167,38,0.1)',
+                                            color: item.status === 'Anunciado' ? 'var(--primary-400)' : 'var(--warning)'
+                                          }}>
+                                            {item.status || 'Pendente'}
+                                          </span>
+                                        </div>
+                                        <p style={{ color: '#aaa', fontSize: '0.8rem', margin: 0 }}>
+                                          Tipo: {item.tipo_anuncio} • Categoria: {item.categoria} • Quantidade: {item.quantidade} {item.unidade}
+                                        </p>
+                                        <p style={{ color: '#aaa', fontSize: '0.8rem', marginTop: '4px', marginBottom: 0 }}>
+                                          Valor Desejado: R$ {item.valor_desejado?.toLocaleString('pt-BR')} • Publicado em: {new Date(item.data_publicacao).toLocaleDateString('pt-BR')}
+                                        </p>
+                                      </div>
+                                      
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }} onClick={e => e.stopPropagation()}>
+                                        <button
+                                          onClick={() => toggleListingActiveStatus(item)}
+                                          className="btn"
+                                          style={{
+                                            padding: '8px 12px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 'bold',
+                                            background: (item.status === 'Inativo' || item.status === 'Suspenso') ? '#2e7d32' : '#c62828',
+                                            color: '#fff',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                          }}
+                                        >
+                                          {(item.status === 'Inativo' || item.status === 'Suspenso') ? 'Reativar' : 'Suspender'}
+                                        </button>
+
+                                        {/* EXPANSIONS COUNTER CARD */}
+                                        <div style={{
+                                          background: '#0d0d0d', border: '1px solid #222', padding: '10px 16px', borderRadius: '8px',
+                                          textAlign: 'center', minWidth: '150px'
+                                        }}>
+                                          <span style={{ fontSize: '0.65rem', color: '#777', textTransform: 'uppercase', display: 'block', fontWeight: 'bold' }}>
+                                            Visualizações Pró
+                                          </span>
+                                          <strong style={{ fontSize: '1.4rem', color: 'var(--primary-500)', display: 'block', margin: '2px 0' }}>
+                                            {item.leads_expandidos_plano || 0}
+                                          </strong>
+                                          <span style={{ fontSize: '0.65rem', color: '#555', display: 'block', maxWidth: '140px', margin: '0 auto', lineHeight: '1.2' }}>
+                                            Usuários ProAtiva que expandiram o anúncio
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {activeMyListingId === item.id && (
+                                      <div style={{ borderTop: '1px solid #333', paddingTop: '16px', marginTop: '4px' }} onClick={e => e.stopPropagation()}>
+                                        <h4 style={{ color: 'var(--primary-500)', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                          Anúncios Recomendados para Match (Oportunidades Contrárias)
+                                        </h4>
+                                        {(() => {
+                                          const isItemOferta = item.tipo_anuncio?.toLowerCase().includes('oferta')
+                                          const matches = listings
+                                            .filter(l => {
+                                              if (l.id === item.id) return false
+                                              if (l.status !== 'Anunciado') return false
+                                              if (l.categoria !== item.categoria) return false
+                                              const isLOferta = l.tipo_anuncio?.toLowerCase().includes('oferta')
+                                              return isItemOferta !== isLOferta
+                                            })
+                                            .sort((a, b) => {
+                                              const distA = getDistanceBetweenCeps(item.cep || '74000-000', a.cep || '75000-000')
+                                              const distB = getDistanceBetweenCeps(item.cep || '74000-000', b.cep || '75000-000')
+                                              return distB - distA
+                                            })
+
+                                          if (matches.length === 0) {
+                                            return (
+                                              <p style={{ color: '#777', fontSize: '0.8rem', fontStyle: 'italic', margin: 0 }}>
+                                                Nenhum anúncio contrário ativo para match no momento.
+                                              </p>
+                                            )
+                                          }
+
+                                          return (
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                                              {matches.map(m => (
+                                                <div 
+                                                  key={m.id} 
+                                                  onClick={() => handleListingClick(m)}
+                                                  style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'border-color 0.2s' }}
+                                                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary-500)'}
+                                                  onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
+                                                >
+                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                                    <span style={{ fontSize: '0.65rem', color: '#ffb300', fontWeight: 'bold' }}>CONFIDENCIAL</span>
+                                                    <span style={{ fontSize: '0.65rem', background: '#222', color: '#aaa', padding: '2px 6px', borderRadius: '4px' }}>
+                                                      {m.codigo}
+                                                    </span>
+                                                  </div>
+                                                  <h5 style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', margin: '0 0 4px 0' }}>{m.residuo}</h5>
+                                                  <p style={{ color: '#aaa', fontSize: '0.75rem', margin: 0 }}>
+                                                    Qtd: {m.quantidade} {m.unidade} • Disponível a {getDistanceBetweenCeps(item.cep || '74000-000', m.cep || '75000-000')} km de você
+                                                  </p>
+                                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.75rem', borderTop: '1px solid #1a1a1a', paddingTop: '6px' }}>
+                                                    <span style={{ color: '#666' }}>Valor: R$ {m.valor_desejado}</span>
+                                                    <span style={{ color: 'var(--primary-500)' }}>Materra Index: R$ {m.valor_index || 'Calculando...'}</span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )
+                                        })()}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* 2. MEUS NEGÓCIOS CONTENT */}
+                      {activeSubTab === 'negocios' && (() => {
+                        const grouped = releasedContacts.reduce((acc: any, c: any) => {
+                          const adId = c.id_anuncio || 'sem_anuncio'
+                          if (!acc[adId]) {
+                            acc[adId] = {
+                              anuncio: c.anuncio || { codigo: 'N/A', residuo: 'Desconhecido' },
+                              contrapartes: [],
+                              transportadoras: [],
+                              valor_index: c.valor_index,
+                              valor_real: c.valor_real,
+                              premiacao_percent: c.premiacao_percent,
+                              data_liberacao: c.data_liberacao
+                            }
+                          }
+                          if (c.contraparte) {
+                            if (c.contraparte.tipo_parte === 'Transportadora') {
+                              acc[adId].transportadoras.push(c.contraparte)
+                            } else {
+                              acc[adId].contrapartes.push(c.contraparte)
+                            }
+                          }
+                          return acc;
+                        }, {});
+
+                        const filteredGrouped = Object.values(grouped).filter((group: any) => {
+                          if (!isDuplaAptidao) return true;
+                          const isOferta = group.anuncio?.tipo_anuncio?.toLowerCase().includes('oferta');
+                          return myNegociosSubFilter === 'oferta' ? isOferta : !isOferta;
+                        });
+
+                        const filteredAuditLogs = auditLogs.filter((log: any) => {
+                          if (!isDuplaAptidao) return true;
+                          const isOferta = log.anuncio_cad?.tipo_anuncio?.toLowerCase().includes('oferta');
+                          return myNegociosSubFilter === 'oferta' ? isOferta : !isOferta;
+                        });
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* 2.1 Contatos & Transportadoras Liberados */}
+                            <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                Contatos & Transportadoras Liberados
+                              </h4>
+
+                              {/* Sub-selector for Dupla Habilitação */}
+                              {isDuplaAptidao && (
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('oferta')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'oferta' ? 'var(--primary-500)' : '#121212',
+                                      color: myNegociosSubFilter === 'oferta' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Ofertas
+                                  </button>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('demanda')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'demanda' ? 'var(--primary-500)' : '#121212',
+                                      color: myNegociosSubFilter === 'demanda' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Demandas
+                                  </button>
+                                </div>
+                              )}
+
+                              {loadingContacts ? (
+                                <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+                              ) : filteredGrouped.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '30px', border: '1px dashed #333', borderRadius: '8px' }}>
+                                  <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+                                    {isDuplaAptidao 
+                                      ? `Nenhum contato liberado para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                      : 'Nenhum contato liberado até o momento.'
+                                    }
+                                  </p>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                  {filteredGrouped.map((group: any, idx: number) => {
+                                    const an = group.anuncio
+                                    return (
+                                      <div key={idx} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                        {/* Ad Header */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                          <div>
+                                            <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Operação Concluída</span>
+                                            <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 'bold', marginTop: '2px' }}>
+                                              [{an.codigo || 'N/A'}] {an.residuo || 'Resíduo'}
+                                            </h4>
+                                            <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                                              Qtd: {an.quantidade} {an.unidade} • Categoria: {an.categoria || 'Geral'}
+                                            </span>
+                                          </div>
+                                          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#aaa' }}>
+                                            {group.valor_index > 0 && <div>Materra Index: R$ {group.valor_index.toLocaleString('pt-BR')}</div>}
+                                            {group.valor_real > 0 && <div style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>Valor Fechado: R$ {group.valor_real.toLocaleString('pt-BR')}</div>}
+                                            {group.premiacao_percent > 0 && <div style={{ color: '#25D366' }}>Economia: {group.premiacao_percent}%</div>}
+                                          </div>
+                                        </div>
+
+                                        {/* Contacts info grid */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                                          {/* Counterparties */}
+                                          <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                            <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                              Contato da Contraparte
+                                            </h5>
+                                            {group.contrapartes.length === 0 ? (
+                                              <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhum contato de contraparte.</p>
+                                            ) : (
+                                              group.contrapartes.map((cp: any, cpIdx: number) => (
+                                                <div key={cpIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                  <strong>Razão Social:</strong> {cp.nome_ou_razao}<br />
+                                                  <strong>CNPJ/CPF:</strong> {cp.cpf_ou_cnpj}<br />
+                                                  <strong>E-mail:</strong> {cp.email}<br />
+                                                  <strong>WhatsApp:</strong> {cp.whatsapp || cp.telefone || 'Não informado'}
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+
+                                          {/* Carrier (optional) */}
+                                          <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                            <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                              Transportadora do Lote
+                                            </h5>
+                                            {group.transportadoras.length === 0 ? (
+                                              <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhuma transportadora contratada por leilão reverso.</p>
+                                            ) : (
+                                              group.transportadoras.map((tp: any, tIdx: number) => (
+                                                <div key={tIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                  <strong>Razão Social:</strong> {tp.nome_ou_razao}<br />
+                                                  <strong>ANTT/CNPJ:</strong> {tp.cpf_ou_cnpj || tp.rntrc_num || 'N/A'}<br />
+                                                  <strong>WhatsApp:</strong> {tp.whatsapp || tp.telefone || 'Não informado'}
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* 2.2 Transações Homologadas e Rastreabilidade (Audit Trail Privado) */}
+                            <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                Transações Homologadas e Rastreabilidade (Audit Trail Privado)
+                              </h4>
+                              {loadingAudit ? (
+                                <p style={{ color: '#888', fontSize: '0.8rem' }}>Buscando histórico...</p>
+                              ) : filteredAuditLogs.length === 0 ? (
+                                <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>
+                                  {isDuplaAptidao 
+                                    ? `Nenhuma transação fechada e auditada para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                    : 'Nenhuma transação fechada e auditada ainda.'
+                                  }
+                                </p>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                  {filteredAuditLogs.map(log => (
+                                    <div key={log.id} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1px solid #2a2a2a', paddingBottom: '8px', marginBottom: '8px' }}>
+                                        <span style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                          MTR: {log.mtr_numero || 'Pendente'} | CDF: {log.cdf_numero || 'Pendente'}
+                                        </span>
+                                        <span style={{ color: '#777', fontSize: '0.75rem' }}>
+                                          {new Date(log.data_hora).toLocaleDateString('pt-BR')}
+                                        </span>
+                                      </div>
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '0.8rem' }}>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Resíduo:</strong>
+                                          <span style={{ color: '#fff' }}>{log.anuncio_cad?.residuo || 'Mapeado'} (Cod: {log.anuncio_cad?.codigo || 'N/A'})</span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Partes Envolvidas:</strong>
+                                          <span style={{ color: '#fff' }}>
+                                            Fornecedor: {log.fornecedor_cad?.nome_ou_razao || 'N/A'}<br />
+                                            Comprador: {log.comprador_cad?.nome_ou_razao || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Valores Registrados:</strong>
+                                          <span style={{ color: '#fff' }}>
+                                            Resíduo: R$ {log.valor_residuo_rs?.toLocaleString('pt-BR') || '0'}<br />
+                                            Frete: R$ {log.valor_frete_rs?.toLocaleString('pt-BR') || '0'}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Classificação de Segurança:</strong>
+                                          <span style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>
+                                            Audit: {log.nivel_audit}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+############################
+
+### STEP 12497: replace_file_content ###
+StartLine: 1291 | EndLine: 1292
+--- TARGET CONTENT ---
+  const [geralSubTab, setGeralSubTab] = useState<'anuncios' | 'negocios'>('anuncios')
+--- REPLACEMENT CONTENT ---
+  const [geralSubTab, setGeralSubTab] = useState<'anuncios' | 'negocios'>('anuncios')
+  const [negociosView, setNegociosView] = useState<'contatos' | 'auditoria'>('contatos')
+############################
+
+### STEP 12509: replace_file_content ###
+StartLine: 3397 | EndLine: 3556
+--- TARGET CONTENT ---
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* 2.1 Contatos & Transportadoras Liberados */}
+                            <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                Contatos & Transportadoras Liberados
+                              </h4>
+
+                              {/* Sub-selector for Dupla Habilitação */}
+                              {isDuplaAptidao && (
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('oferta')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'oferta' ? 'var(--primary-500)' : '#121212',
+                                      color: myNegociosSubFilter === 'oferta' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Ofertas
+                                  </button>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('demanda')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'demanda' ? 'var(--primary-500)' : '#121212',
+                                      color: myNegociosSubFilter === 'demanda' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Demandas
+                                  </button>
+                                </div>
+                              )}
+
+                              {loadingContacts ? (
+                                <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+                              ) : filteredGrouped.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '30px', border: '1px dashed #333', borderRadius: '8px' }}>
+                                  <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+                                    {isDuplaAptidao 
+                                      ? `Nenhum contato liberado para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                      : 'Nenhum contato liberado até o momento.'
+                                    }
+                                  </p>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                  {filteredGrouped.map((group: any, idx: number) => {
+                                    const an = group.anuncio
+                                    return (
+                                      <div key={idx} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                        {/* Ad Header */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                          <div>
+                                            <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Operação Concluída</span>
+                                            <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 'bold', marginTop: '2px' }}>
+                                              [{an.codigo || 'N/A'}] {an.residuo || 'Resíduo'}
+                                            </h4>
+                                            <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                                              Qtd: {an.quantidade} {an.unidade} • Categoria: {an.categoria || 'Geral'}
+                                            </span>
+                                          </div>
+                                          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#aaa' }}>
+                                            {group.valor_index > 0 && <div>Materra Index: R$ {group.valor_index.toLocaleString('pt-BR')}</div>}
+                                            {group.valor_real > 0 && <div style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>Valor Fechado: R$ {group.valor_real.toLocaleString('pt-BR')}</div>}
+                                            {group.premiacao_percent > 0 && <div style={{ color: '#25D366' }}>Economia: {group.premiacao_percent}%</div>}
+                                          </div>
+                                        </div>
+
+                                        {/* Contacts info grid */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                                          {/* Counterparties */}
+                                          <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                            <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                              Contato da Contraparte
+                                            </h5>
+                                            {group.contrapartes.length === 0 ? (
+                                              <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhum contato de contraparte.</p>
+                                            ) : (
+                                              group.contrapartes.map((cp: any, cpIdx: number) => (
+                                                <div key={cpIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                  <strong>Razão Social:</strong> {cp.nome_ou_razao}<br />
+                                                  <strong>CNPJ/CPF:</strong> {cp.cpf_ou_cnpj}<br />
+                                                  <strong>E-mail:</strong> {cp.email}<br />
+                                                  <strong>WhatsApp:</strong> {cp.whatsapp || cp.telefone || 'Não informado'}
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+
+                                          {/* Carrier (optional) */}
+                                          <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                            <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                              Transportadora do Lote
+                                            </h5>
+                                            {group.transportadoras.length === 0 ? (
+                                              <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhuma transportadora contratada por leilão reverso.</p>
+                                            ) : (
+                                              group.transportadoras.map((tp: any, tIdx: number) => (
+                                                <div key={tIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                  <strong>Razão Social:</strong> {tp.nome_ou_razao}<br />
+                                                  <strong>ANTT/CNPJ:</strong> {tp.cpf_ou_cnpj || tp.rntrc_num || 'N/A'}<br />
+                                                  <strong>WhatsApp:</strong> {tp.whatsapp || tp.telefone || 'Não informado'}
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* 2.2 Transações Homologadas e Rastreabilidade (Audit Trail Privado) */}
+                            <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                Transações Homologadas e Rastreabilidade (Audit Trail Privado)
+                              </h4>
+                              {loadingAudit ? (
+                                <p style={{ color: '#888', fontSize: '0.8rem' }}>Buscando histórico...</p>
+                              ) : filteredAuditLogs.length === 0 ? (
+                                <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>
+                                  {isDuplaAptidao 
+                                    ? `Nenhuma transação fechada e auditada para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                    : 'Nenhuma transação fechada e auditada ainda.'
+                                  }
+                                </p>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                  {filteredAuditLogs.map(log => (
+                                    <div key={log.id} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1px solid #2a2a2a', paddingBottom: '8px', marginBottom: '8px' }}>
+                                        <span style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                          MTR: {log.mtr_numero || 'Pendente'} | CDF: {log.cdf_numero || 'Pendente'}
+                                        </span>
+                                        <span style={{ color: '#777', fontSize: '0.75rem' }}>
+                                          {new Date(log.data_hora).toLocaleDateString('pt-BR')}
+                                        </span>
+                                      </div>
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '0.8rem' }}>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Resíduo:</strong>
+                                          <span style={{ color: '#fff' }}>{log.anuncio_cad?.residuo || 'Mapeado'} (Cod: {log.anuncio_cad?.codigo || 'N/A'})</span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Partes Envolvidas:</strong>
+                                          <span style={{ color: '#fff' }}>
+                                            Fornecedor: {log.fornecedor_cad?.nome_ou_razao || 'N/A'}<br />
+                                            Comprador: {log.comprador_cad?.nome_ou_razao || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Valores Registrados:</strong>
+                                          <span style={{ color: '#fff' }}>
+                                            Resíduo: R$ {log.valor_residuo_rs?.toLocaleString('pt-BR') || '0'}<br />
+                                            Frete: R$ {log.valor_frete_rs?.toLocaleString('pt-BR') || '0'}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <strong style={{ color: '#aaa', display: 'block' }}>Classificação de Segurança:</strong>
+                                          <span style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>
+                                            Audit: {log.nivel_audit}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+--- REPLACEMENT CONTENT ---
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Controls Bar: Role Filters on the left (if Dupla Habilitação), View Switch on the right */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
+                              {/* Left: Role Filter (if Dupla Habilitação) */}
+                              {isDuplaAptidao ? (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('oferta')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'oferta' ? 'var(--primary-500)' : '#1c1c1c',
+                                      color: myNegociosSubFilter === 'oferta' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'oferta' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Ofertas
+                                  </button>
+                                  <button
+                                    onClick={() => setMyNegociosSubFilter('demanda')}
+                                    style={{
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      background: myNegociosSubFilter === 'demanda' ? 'var(--primary-500)' : '#1c1c1c',
+                                      color: myNegociosSubFilter === 'demanda' ? '#000' : '#aaa',
+                                      border: myNegociosSubFilter === 'demanda' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                    }}
+                                  >
+                                    Negócios de Demandas
+                                  </button>
+                                </div>
+                              ) : <div />}
+
+                              {/* Right: Section Switch (Contatos / Auditoria) */}
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  onClick={() => setNegociosView('contatos')}
+                                  style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    background: negociosView === 'contatos' ? 'var(--primary-500)' : '#1c1c1c',
+                                    color: negociosView === 'contatos' ? '#000' : '#aaa',
+                                    border: negociosView === 'contatos' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                  }}
+                                >
+                                  Contatos Liberados
+                                </button>
+                                <button
+                                  onClick={() => setNegociosView('auditoria')}
+                                  style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    background: negociosView === 'auditoria' ? 'var(--primary-500)' : '#1c1c1c',
+                                    color: negociosView === 'auditoria' ? '#000' : '#aaa',
+                                    border: negociosView === 'auditoria' ? '1px solid var(--primary-500)' : '1px solid #333'
+                                  }}
+                                >
+                                  Transações & Auditoria
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 2.1 Contatos & Transportadoras Liberados View */}
+                            {negociosView === 'contatos' && (
+                              <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                                <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                  Contatos & Transportadoras Liberados
+                                </h4>
+
+                                {loadingContacts ? (
+                                  <p style={{ color: '#888', fontSize: '0.85rem' }}>Buscando contatos...</p>
+                                ) : filteredGrouped.length === 0 ? (
+                                  <div style={{ textAlign: 'center', padding: '30px', border: '1px dashed #333', borderRadius: '8px' }}>
+                                    <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+                                      {isDuplaAptidao 
+                                        ? `Nenhum contato liberado para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                        : 'Nenhum contato liberado até o momento.'
+                                      }
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {filteredGrouped.map((group: any, idx: number) => {
+                                      const an = group.anuncio
+                                      return (
+                                        <div key={idx} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                          {/* Ad Header */}
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                            <div>
+                                              <span style={{ color: 'var(--primary-500)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Operação Concluída</span>
+                                              <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 'bold', marginTop: '2px' }}>
+                                                [{an.codigo || 'N/A'}] {an.residuo || 'Resíduo'}
+                                              </h4>
+                                              <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                                                Qtd: {an.quantidade} {an.unidade} • Categoria: {an.categoria || 'Geral'}
+                                              </span>
+                                            </div>
+                                            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#aaa' }}>
+                                              {group.valor_index > 0 && <div>Materra Index: R$ {group.valor_index.toLocaleString('pt-BR')}</div>}
+                                              {group.valor_real > 0 && <div style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>Valor Fechado: R$ {group.valor_real.toLocaleString('pt-BR')}</div>}
+                                              {group.premiacao_percent > 0 && <div style={{ color: '#25D366' }}>Economia: {group.premiacao_percent}%</div>}
+                                            </div>
+                                          </div>
+
+                                          {/* Contacts info grid */}
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                                            {/* Counterparties */}
+                                            <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                              <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                                Contato da Contraparte
+                                              </h5>
+                                              {group.contrapartes.length === 0 ? (
+                                                <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhum contato de contraparte.</p>
+                                              ) : (
+                                                group.contrapartes.map((cp: any, cpIdx: number) => (
+                                                  <div key={cpIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                    <strong>Razão Social:</strong> {cp.nome_ou_razao}<br />
+                                                    <strong>CNPJ/CPF:</strong> {cp.cpf_ou_cnpj}<br />
+                                                    <strong>E-mail:</strong> {cp.email}<br />
+                                                    <strong>WhatsApp:</strong> {cp.whatsapp || cp.telefone || 'Não informado'}
+                                                  </div>
+                                                ))
+                                              )}
+                                            </div>
+
+                                            {/* Carrier (optional) */}
+                                            <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '12px', borderRadius: '6px' }}>
+                                              <h5 style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                                Transportadora do Lote
+                                              </h5>
+                                              {group.transportadoras.length === 0 ? (
+                                                <p style={{ color: '#666', fontSize: '0.75rem' }}>Nenhuma transportadora contratada por leilão reverso.</p>
+                                              ) : (
+                                                group.transportadoras.map((tp: any, tIdx: number) => (
+                                                  <div key={tIdx} style={{ fontSize: '0.8rem', color: '#ccc', lineHeight: '1.5' }}>
+                                                    <strong>Razão Social:</strong> {tp.nome_ou_razao}<br />
+                                                    <strong>ANTT/CNPJ:</strong> {tp.cpf_ou_cnpj || tp.rntrc_num || 'N/A'}<br />
+                                                    <strong>WhatsApp:</strong> {tp.whatsapp || tp.telefone || 'Não informado'}
+                                                  </div>
+                                                ))
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* 2.2 Transações Homologadas e Rastreabilidade View */}
+                            {negociosView === 'auditoria' && (
+                              <div style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                                <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>
+                                  Transações Homologadas e Rastreabilidade (Audit Trail Privado)
+                                </h4>
+                                {loadingAudit ? (
+                                  <p style={{ color: '#888', fontSize: '0.8rem' }}>Buscando histórico...</p>
+                                ) : filteredAuditLogs.length === 0 ? (
+                                  <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>
+                                    {isDuplaAptidao 
+                                      ? `Nenhuma transação fechada e auditada para negócios de ${myNegociosSubFilter === 'oferta' ? 'Oferta' : 'Demanda'}.`
+                                      : 'Nenhuma transação fechada e auditada ainda.'
+                                    }
+                                  </p>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {filteredAuditLogs.map(log => (
+                                      <div key={log.id} style={{ background: '#121212', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1px solid #2a2a2a', paddingBottom: '8px', marginBottom: '8px' }}>
+                                          <span style={{ color: 'var(--primary-500)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                            MTR: {log.mtr_numero || 'Pendente'} | CDF: {log.cdf_numero || 'Pendente'}
+                                          </span>
+                                          <span style={{ color: '#777', fontSize: '0.75rem' }}>
+                                            {new Date(log.data_hora).toLocaleDateString('pt-BR')}
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '0.8rem' }}>
+                                          <div>
+                                            <strong style={{ color: '#aaa', display: 'block' }}>Resíduo:</strong>
+                                            <span style={{ color: '#fff' }}>{log.anuncio_cad?.residuo || 'Mapeado'} (Cod: {log.anuncio_cad?.codigo || 'N/A'})</span>
+                                          </div>
+                                          <div>
+                                            <strong style={{ color: '#aaa', display: 'block' }}>Partes Envolvidas:</strong>
+                                            <span style={{ color: '#fff' }}>
+                                              Fornecedor: {log.fornecedor_cad?.nome_ou_razao || 'N/A'}<br />
+                                              Comprador: {log.comprador_cad?.nome_ou_razao || 'N/A'}
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <strong style={{ color: '#aaa', display: 'block' }}>Valores Registrados:</strong>
+                                            <span style={{ color: '#fff' }}>
+                                              Resíduo: R$ {log.valor_residuo_rs?.toLocaleString('pt-BR') || '0'}<br />
+                                              Frete: R$ {log.valor_frete_rs?.toLocaleString('pt-BR') || '0'}
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <strong style={{ color: '#aaa', display: 'block' }}>Classificação de Segurança:</strong>
+                                            <span style={{ color: 'var(--primary-500)', fontWeight: 'bold' }}>
+                                              Audit: {log.nivel_audit}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+############################
+

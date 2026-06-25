@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Materra Elo — Mockups de Cards e Fichas</title>
+<style>
+:root {
+  --yellow: #FFD700; --yellow-deep: #E6C200; --yellow-soft: #FFF7CC;
+  --black: #0A0A0A; --gray-900: #1A1A1A; --gray-700: #444;
+  --gray-500: #888; --gray-300: #DDD; --gray-100: #F2F2F2;
+  --cream: #F7F7F2; --white: #FFFFFF;
+  --red: #C01010; --red-soft: #FFEAEA;
+  --green: #108030; --green-soft: #E8F7EC;
+  --blue: #1040A0; --blue-soft: #E8EEF8;
+  --orange: #D87000; --orange-soft: #FFF0E0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: var(--cream); color: var(--black);
+  line-height: 1.45; padding: 24px; min-width: 1200px;
+}
+.page-title { font-size: 38px; font-weight: 800; color: var(--yellow-deep); margin-bottom: 4px; }
+.page-sub { font-size: 16px; color: var(--gray-700); margin-bottom: 28px; font-style: italic; }
+.section {
+  margin: 36px 0 16px;
+  background: var(--black); color: var(--yellow);
+  padding: 10px 18px; font-weight: 700; font-size: 15px;
+  letter-spacing: 0.4px; border-radius: 4px;
+}
+.row { display: grid; grid-template-columns: 380px 1fr; gap: 24px; margin-bottom: 24px; align-items: start; }
+.row-wide { display: grid; grid-template-columns: 480px 1fr; gap: 24px; margin-bottom: 24px; align-items: start; }
+.card-wrap { display: flex; flex-direction: column; gap: 8px; }
+.card-label {
+  font-size: 11px; font-weight: 700; color: var(--gray-700);
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.annot {
+  background: var(--white); border: 1px solid var(--gray-300);
+  border-left: 4px solid var(--yellow); padding: 12px 14px; border-radius: 4px;
+  font-size: 12.5px; color: var(--gray-700);
+}
+.annot h4 { font-size: 13px; color: var(--black); margin-bottom: 6px; }
+.annot ul { margin-left: 16px; margin-top: 4px; }
+.annot li { margin-bottom: 2px; }
+.annot code { background: var(--gray-100); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; font-family: Menlo, monospace; }
+
+/* ============== ANNOUNCEMENT CARD ============== */
+.card {
+  width: 380px; background: var(--white);
+  border: 1px solid var(--gray-300); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06); font-size: 13px; position: relative;
+}
+.card-header {
+  padding: 12px 14px 8px; display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--gray-100);
+}
+.badge-tipo {
+  display: inline-block; padding: 3px 9px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.7px; border-radius: 4px; text-transform: uppercase;
+}
+.badge-oferta { background: var(--yellow); color: var(--black); }
+.badge-demanda { background: var(--black); color: var(--yellow); }
+.badge-urgent { background: var(--red); color: var(--white); margin-left: 4px; animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.fav-btn {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--gray-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--gray-500); cursor: pointer; border: none;
+}
+.fav-btn.active { color: var(--red); }
+.selo-block {
+  display: flex; flex-direction: column; align-items: flex-end;
+  font-size: 10px; color: var(--gray-700); line-height: 1.1;
+}
+.selo-block .selo-label { font-size: 9px; text-transform: uppercase; font-weight: 600; }
+.selo-pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px;
+  background: var(--yellow-soft); border: 1px solid var(--yellow); border-radius: 10px;
+  font-size: 10.5px; font-weight: 700; color: var(--gray-900); margin-top: 2px;
+}
+.selo-pill.prata { background: #ECECEC; border-color: #B8B8B8; }
+.selo-pill.bronze { background: #F7E5D2; border-color: #C68A4A; }
+.selo-pill.ouro   { background: #FFF1B3; border-color: #D4B000; }
+.selos-2x { display: flex; gap: 8px; }
+.selo-mini {
+  display: flex; flex-direction: column; align-items: center;
+  font-size: 8px; color: var(--gray-500); line-height: 1.2;
+}
+
+.card-title {
+  padding: 10px 14px 4px; font-size: 16px; font-weight: 700;
+  color: var(--black); line-height: 1.25;
+}
+.card-subtitle {
+  padding: 0 14px 8px; font-size: 11.5px; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.card-info {
+  padding: 8px 14px; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px 12px; background: var(--cream); font-size: 12px; color: var(--gray-900);
+}
+.info-row { display: flex; align-items: center; gap: 6px; }
+.info-row .ico { font-size: 13px; opacity: 0.85; }
+.info-row b { font-weight: 700; }
+
+.card-price {
+  padding: 10px 14px; background: var(--yellow-soft);
+  border-top: 1px solid var(--yellow); border-bottom: 1px solid var(--yellow);
+  font-size: 13px; font-weight: 700; color: var(--black);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-price small { font-size: 10.5px; font-weight: 500; color: var(--gray-700); }
+
+.card-metrics {
+  padding: 8px 14px; font-size: 11.5px; color: var(--gray-700);
+  background: var(--white); border-top: 1px solid var(--gray-100);
+  display: flex; gap: 12px;
+}
+.card-negotiation {
+  padding: 9px 14px; background: var(--red-soft); border-top: 1px solid var(--red);
+  font-size: 12px; color: var(--red); font-weight: 700;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-negotiation .timer { font-family: Menlo, monospace; font-size: 13px; }
+.card-closed {
+  padding: 12px 14px; background: var(--green-soft);
+  border-top: 1px solid var(--green); font-size: 12px;
+  color: var(--green); font-weight: 700; text-align: center;
+}
+.card-footer {
+  padding: 8px 14px 10px; display: flex; justify-content: space-between;
+  align-items: center; background: var(--white);
+}
+.card-total { font-size: 11px; color: var(--gray-700); }
+.card-total b { color: var(--black); font-size: 13px; }
+.card-actions { display: flex; gap: 6px; padding: 10px 14px 14px; }
+.btn {
+  flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 12px;
+  font-weight: 700; border: none; cursor: pointer; text-align: center;
+}
+.btn-primary { background: var(--yellow); color: var(--black); }
+.btn-secondary { background: var(--gray-100); color: var(--gray-900); border: 1px solid var(--gray-300); }
+.btn-dark { background: var(--black); color: var(--yellow); }
+
+/* Maximized card */
+.card-max { width: 480px; }
+.card-max .section-title {
+  padding: 10px 14px 4px; font-size: 11px; font-weight: 700;
+  color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.6px;
+  background: var(--white); border-top: 1px solid var(--gray-100);
+}
+.card-max .section-body {
+  padding: 4px 14px 10px; font-size: 12px; color: var(--gray-900); line-height: 1.5;
+}
+.card-max .section-body ul { margin-left: 18px; margin-top: 4px; }
+.card-max .ficha-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--cream);
+  border-top: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100);
+  font-size: 12px; font-weight: 700; color: var(--gray-900); cursor: pointer;
+}
+.card-max .ficha-link:hover { background: var(--yellow-soft); }
+.card-max .ficha-link .arrow { color: var(--gray-500); font-size: 16px; }
+
+/* Frete dedicated block */
+.frete-block {
+  padding: 10px 14px; background: var(--blue-soft);
+  border-top: 1px solid var(--blue); border-bottom: 1px solid var(--blue);
+  font-size: 12px; color: var(--blue); font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.frete-block .frete-ico { font-size: 16px; }
+.frete-block .frete-text { flex: 1; }
+
+.avaliacao-item {
+  padding: 8px 14px; font-size: 11.5px; color: var(--gray-700);
+  border-top: 1px solid var(--gray-100); background: var(--white);
+}
+.avaliacao-item .stars { color: var(--yellow-deep); font-weight: 700; margin-right: 6px; }
+.avaliacao-item .date { color: var(--gray-500); font-size: 10.5px; margin-left: 6px; }
+.avaliacao-item .anon { color: var(--gray-500); font-size: 10px; display: inline; margin-left: 4px; font-style: italic; }
+
+.help-tooltip {
+  display: inline-flex; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--black); color: var(--yellow); align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; margin-left: 4px; cursor: pointer;
+  border: none;
+}
+.help-tooltip:hover { background: var(--yellow); color: var(--black); }
+
+/* ============== FICHA MATERRA ============== */
+.ficha {
+  width: 480px; background: var(--white);
+  border: 2px solid var(--black); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08); font-size: 13px;
+}
+.ficha-header {
+  background: linear-gradient(135deg, var(--black), var(--gray-900));
+  color: var(--white); padding: 16px 18px 14px;
+}
+.ficha-header .ficha-tag {
+  display: inline-block; background: var(--yellow); color: var(--black);
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+}
+.ficha-header .razao { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
+.ficha-header .cnpj { font-size: 11.5px; color: rgba(255,255,255,0.7); font-family: Menlo, monospace; }
+.ficha-header .loc { font-size: 12px; margin-top: 4px; color: rgba(255,255,255,0.85); }
+.ficha-header .anon-mark {
+  font-size: 18px; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ficha-header .anon-mark::before { content: "🛡️"; font-size: 18px; }
+
+.ficha-perfis {
+  padding: 12px 18px; background: var(--yellow-soft);
+  border-bottom: 1px solid var(--yellow);
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+}
+.perfil-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.perfil-chip {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 6px 10px; background: var(--white); border: 1px solid var(--yellow);
+  border-radius: 6px; font-size: 11px; gap: 4px;
+}
+.perfil-chip .label { font-weight: 700; color: var(--gray-900); }
+.perfil-chip .score-line { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+
+.ficha-block { padding: 12px 18px; border-bottom: 1px solid var(--gray-100); }
+.ficha-block h4 {
+  font-size: 11px; font-weight: 700; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+}
+.doc-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 12.5px; border-bottom: 1px dashed var(--gray-100);
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-item .doc-name { color: var(--gray-900); }
+.doc-item .doc-valid { font-size: 11px; color: var(--green); font-weight: 700; }
+.doc-item .doc-valid.expiring { color: var(--orange); }
+.doc-item .doc-valid.expired { color: var(--red); }
+.doc-item .doc-link {
+  font-size: 11px; color: var(--blue); text-decoration: underline; font-weight: 700;
+  cursor: pointer; margin-left: 8px;
+}
+.doc-possui {
+  display: inline-block; padding: 4px 10px; background: var(--green-soft);
+  border: 1px solid var(--green); border-radius: 12px;
+  font-size: 11px; color: var(--green); font-weight: 700;
+  margin-right: 6px; margin-bottom: 4px;
+}
+
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat-card { background: var(--cream); padding: 10px; border-radius: 6px; text-align: center; }
+.stat-card .stat-num {
+  font-size: 22px; font-weight: 800; color: var(--black); display: block; line-height: 1.1;
+}
+.stat-card .stat-label {
+  font-size: 10px; text-transform: uppercase; color: var(--gray-500); letter-spacing: 0.4px;
+}
+
+.represented-list { margin-top: 4px; }
+.represented-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px; background: var(--cream); border-radius: 6px; margin-bottom: 6px;
+}
+.represented-item .rep-name { font-size: 12.5px; font-weight: 700; color: var(--black); }
+.represented-item .rep-status {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px;
+}
+.rep-status.confirmed { background: var(--green-soft); color: var(--green); }
+.rep-status.pending { background: var(--orange-soft); color: var(--orange); }
+.rep-status.unconfirmed { background: var(--gray-100); color: var(--gray-700); }
+
+.disclaimer {
+  padding: 10px 18px; background: var(--gray-100);
+  font-size: 10.5px; color: var(--gray-700); font-style: italic;
+  text-align: center; border-top: 1px solid var(--gray-300);
+}
+
+.anon-tag {
+  display: inline-block; padding: 3px 8px; background: var(--gray-100);
+  border-radius: 4px; font-size: 10px; color: var(--gray-700);
+  font-style: italic; margin-left: 6px;
+}
+
+/* ============== MODAL "?" ============== */
+.modal-mock {
+  width: 480px; background: var(--white);
+  border: 2px solid var(--yellow); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18); font-size: 13px;
+}
+.modal-header {
+  padding: 14px 18px; background: var(--yellow); color: var(--black);
+  font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-close {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--black);
+  color: var(--yellow); font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-body { padding: 16px 18px; color: var(--gray-900); font-size: 12.5px; }
+.modal-body h5 {
+  font-size: 12px; font-weight: 700; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: 12px 0 6px;
+}
+.modal-body h5:first-child { margin-top: 0; }
+.selo-table {
+  display: grid; grid-template-columns: 100px 1fr; gap: 6px 14px;
+  font-size: 12px; margin: 4px 0;
+}
+.selo-table .stbl-pill {
+  display: inline-block; padding: 3px 9px; border-radius: 10px;
+  font-weight: 700; font-size: 11px; text-align: center;
+}
+.formula {
+  background: var(--cream); border-left: 3px solid var(--yellow);
+  padding: 8px 12px; font-family: Menlo, monospace;
+  font-size: 11.5px; margin: 6px 0; border-radius: 4px;
+  color: var(--gray-900); line-height: 1.7;
+}
+
+/* Regras finais */
+.rules-block {
+  background: var(--white); border: 2px solid var(--black);
+  border-radius: 12px; padding: 18px 22px; margin-top: 12px;
+}
+.rules-block h3 {
+  font-size: 18px; color: var(--yellow-deep); margin-bottom: 12px;
+}
+.rules-block h4 {
+  font-size: 13px; color: var(--black); margin: 16px 0 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.rules-block ul { margin-left: 20px; }
+.rules-block li { margin-bottom: 6px; font-size: 12.5px; color: var(--gray-900); line-height: 1.55; }
+.rules-block code { background: var(--cream); padding: 1px 6px; border-radius: 3px; font-size: 11.5px; font-family: Menlo, monospace; }
+.rules-block strong { color: var(--black); }
+</style>
+</head>
+<body>
+
+<div class="page-title">Materra Elo — Mockups de Cards e Fichas</div>
+<div class="page-sub">Mockups visuais + regras de negócio. Pronto pra colar no Antigravity.</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 1 — Card MINIMIZADO · Oferta de Fornecedor (Empresa) · sem negociação</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — Oferta · Empresa Fornecedor (anunciante recebe)</span>
+<div class="card">
+  <div class="card-header">
+    <div><span class="badge-tipo badge-oferta">Oferta</span></div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill prata">⭐ Prata · 62</span>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Aparas de PEAD pós-consumo limpo</div>
+  <div class="card-subtitle">Plásticos · 07 02 13 · Classe IIB</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>12 t</b>/mês</div>
+    <div class="info-row"><span class="ico">📅</span> Mensal · 12 meses</div>
+    <div class="info-row"><span class="ico">📍</span> 87 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Recebe pelo resíduo</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 340,00 / tonelada</span>
+    <small>Índice Materra: R$ 332,00</small>
+  </div>
+  <div class="card-metrics">
+    <span>👁 234 visualizações</span><span>🔍 47 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade<br><b>R$ 4.080,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Campos exibidos</h4>
+<ul>
+<li><b>Badge tipo:</b> <code>OFERTA</code> (amarelo) ou <code>DEMANDA</code> (preto).</li>
+<li><b>Selo + Score:</b> chip à direita do header.</li>
+<li><b>Botão favoritar.</b></li>
+<li><b>Título</b>, <b>subtítulo</b> (categoria · código IBAMA · classe).</li>
+<li><b>Quantidade</b> + <b>recorrência</b> + <b>distância</b> em km do CEP do visitante + <b>forma de cobrança</b>.</li>
+<li><b>Preço/tonelada</b> com Índice Materra ao lado.</li>
+<li><b>Métricas (só sem negociação aberta):</b> visualizações + cliques em detalhes.</li>
+<li><b>Rodapé:</b> total calculado.</li>
+<li><b>Botões:</b> "Ver detalhes" (expande) e "Negociar" (abre sala).</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 2 — Card MINIMIZADO · Oferta com anunciante PAGANDO (descendente)</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — Oferta · Empresa Fornecedor (anunciante PAGA pra destinar)</span>
+<div class="card">
+  <div class="card-header">
+    <div><span class="badge-tipo badge-oferta">Oferta</span></div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill prata">⭐ Prata · 58</span>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Borra de tinta industrial</div>
+  <div class="card-subtitle">Tintas · 08 01 11 · Classe I (perigoso)</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>3,5 t</b>/única</div>
+    <div class="info-row"><span class="ico">📅</span> Coleta única</div>
+    <div class="info-row"><span class="ico">📍</span> 220 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Paga pela destinação</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 2.800,00 / tonelada</span>
+    <small>Índice Materra: R$ 3.100,00</small>
+  </div>
+  <div class="card-metrics">
+    <span>👁 89 visualizações</span><span>🔍 21 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade<br><b>R$ 9.800,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Oferta NÃO é igual a "recebo dinheiro"</h4>
+<ul>
+<li><b>Oferta</b> só significa "tenho esse resíduo e quero destinar". A forma de cobrança é independente.</li>
+<li>Neste exemplo, o anunciante <b>PAGA</b> pela destinação porque o resíduo é passivo (Classe I, borra de tinta). Vira leilão <b>descendente</b>: destinadores ofertam abaixo de R$ 2.800/t.</li>
+<li>Já em metais/sucata é o oposto: anunciante <b>recebe</b>, leilão <b>ascendente</b>.</li>
+<li>A linha "🏷️ Paga pela destinação" no card é o que comunica isso, não o badge.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 3 — Card MINIMIZADO · Demanda de Comprador</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — Demanda · Empresa Comprador (paga pelo resíduo)</span>
+<div class="card">
+  <div class="card-header">
+    <div><span class="badge-tipo badge-demanda">Demanda</span></div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Comprador</span>
+        <span class="selo-pill ouro">⭐ Ouro · 81</span>
+      </div>
+      <button class="fav-btn active" title="Favoritar">♥</button>
+    </div>
+  </div>
+  <div class="card-title">Procuro sucata de ferro fundido</div>
+  <div class="card-subtitle">Metais · 12 01 01 · Classe IIB</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>30 t</b>/mês</div>
+    <div class="info-row"><span class="ico">📅</span> Quinzenal · 6 meses</div>
+    <div class="info-row"><span class="ico">📍</span> 142 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Paga pelo resíduo</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 1.150,00 / tonelada</span>
+    <small>Índice Materra: R$ 1.120,00</small>
+  </div>
+  <div class="card-metrics">
+    <span>👁 1.247 visualizações</span><span>🔍 312 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade × período<br><b>R$ 207.000,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Demanda também não é igual a "pago"</h4>
+<ul>
+<li><b>Demanda</b> = "preciso desse resíduo, quero receber". Pode ser pra reciclar (paga) ou pra destinar (recebe, no caso de destinador licenciado).</li>
+<li>Neste exemplo o comprador é uma fundição que <b>paga</b> pela sucata.</li>
+<li>Existe o caso inverso: destinador de Classe I publica Demanda porque presta o serviço, e <b>recebe</b> pra retirar o passivo. Vira leilão descendente.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 4 — Card MINIMIZADO · Oferta de Controlador (com 2 selos)</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — Oferta · Controlador representando empresa</span>
+<div class="card">
+  <div class="card-header">
+    <div>
+      <span class="badge-tipo badge-oferta">Oferta</span>
+      <span style="display:block; font-size:9px; color:var(--gray-500); margin-top:3px; letter-spacing:0.5px;">VIA CONTROLADOR</span>
+    </div>
+    <div class="header-right">
+      <div class="selos-2x">
+        <div class="selo-mini">
+          <span style="font-size:8px;">Controlador</span>
+          <span class="selo-pill bronze" style="font-size:9.5px;">⭐ Bronze · 35</span>
+        </div>
+        <div class="selo-mini">
+          <span style="font-size:8px;">Empresa</span>
+          <span class="selo-pill ouro" style="font-size:9.5px;">⭐ Ouro · 78</span>
+        </div>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Borra de tinta industrial (caldeira)</div>
+  <div class="card-subtitle">Tintas · 08 01 11 · Classe I (perigoso)</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>3,5 t</b>/única</div>
+    <div class="info-row"><span class="ico">📅</span> Coleta única</div>
+    <div class="info-row"><span class="ico">📍</span> 220 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Paga pela destinação</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 2.800,00 / tonelada</span>
+    <small>Índice Materra: R$ 3.100,00</small>
+  </div>
+  <div class="card-metrics">
+    <span>👁 89 visualizações</span><span>🔍 21 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade<br><b>R$ 9.800,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Quando o anunciante é Controlador</h4>
+<ul>
+<li><b>2 grupinhos de selo lado a lado:</b> Controlador (Bronze 35) + Empresa Representada (Ouro 78).</li>
+<li>Etiqueta <b>"VIA CONTROLADOR"</b> abaixo do badge.</li>
+<li>Identidade da empresa representada permanece oculta no card (regra anti-desintermediação).</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 5 — Estados de negociação aberta e fechada</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — em sala de leilão</span>
+<div class="card">
+  <div class="card-header">
+    <div><span class="badge-tipo badge-oferta">Oferta</span></div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill prata">⭐ Prata · 62</span>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Aparas de PEAD pós-consumo limpo</div>
+  <div class="card-subtitle">Plásticos · 07 02 13 · Classe IIB</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>12 t</b>/mês</div>
+    <div class="info-row"><span class="ico">📅</span> Mensal · 12 meses</div>
+    <div class="info-row"><span class="ico">📍</span> 87 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Recebe pelo resíduo</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 340,00 / tonelada</span>
+    <small>Atual: R$ 365,00</small>
+  </div>
+  <div class="card-negotiation">
+    <span>🔥 3 interessados negociando</span>
+    <span class="timer">⏱ 01:23:47</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Lance atual × quantidade<br><b>R$ 4.380,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-dark">Entrar na sala</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Em negociação aberta</h4>
+<ul>
+<li>Bloco vermelho <b>"🔥 X interessados negociando"</b> + <b>timer regressivo</b> substituem as métricas.</li>
+<li>Preço passa a mostrar "lance atual".</li>
+<li>Botão primário vira <b>"Entrar na sala"</b> (preto + amarelo).</li>
+<li><b>Anti-snipe</b> nos 2 min finais: timer pisca em vermelho + label "⚡ ANTI-SNIPE".</li>
+<li>Se a duração foi configurada <b>zero (pagou já libera contato)</b>: bloco mostra "🚀 Contato liberado direto" e botão vira "Pagar Taxa Lead e ver contato".</li>
+</ul>
+</div>
+</div>
+
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — fechado (histórico)</span>
+<div class="card" style="opacity:0.95;">
+  <div class="card-header">
+    <div>
+      <span class="badge-tipo badge-oferta">Oferta</span>
+      <span style="display:block; font-size:9px; color:var(--green); margin-top:3px; letter-spacing:0.5px; font-weight:700;">✓ NEGÓCIO FECHADO</span>
+    </div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill prata">⭐ Prata · 62</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-title">Aparas de PEAD pós-consumo limpo</div>
+  <div class="card-subtitle">Plásticos · 07 02 13 · Classe IIB</div>
+  <div class="card-closed">R$ 4.380,00 fechado em 12/06/2026</div>
+  <div class="card-metrics" style="justify-content:center;">
+    <span>⭐⭐⭐⭐⭐ Avaliação trilateral: 4,8 média</span>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver minha Audit Trail</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Fechado</h4>
+<ul>
+<li>Faixa verde com valor + data.</li>
+<li>Avaliação trilateral (média) se houver — opcional.</li>
+<li><b>Botão "Ver minha Audit Trail":</b> só aparece para as partes que participaram da operação. <b>Audit Trail é 100% privada</b> — terceiros não veem.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 6 — Card MAXIMIZADO · Oferta de Empresa Fornecedor</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Card maximizado — Oferta · Empresa</span>
+<div class="card card-max">
+  <div class="card-header">
+    <div><span class="badge-tipo badge-oferta">Oferta</span></div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill prata">⭐ Prata · 62 <button class="help-tooltip" title="O que isso significa">?</button></span>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Aparas de PEAD pós-consumo limpo</div>
+  <div class="card-subtitle">Plásticos · 07 02 13 · Classe IIB</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>12 t</b>/mês</div>
+    <div class="info-row"><span class="ico">📅</span> Mensal · 12 meses</div>
+    <div class="info-row"><span class="ico">📍</span> Contagem/MG · 87 km</div>
+    <div class="info-row"><span class="ico">🏷️</span> Recebe pelo resíduo</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 340,00 / tonelada</span>
+    <small>Índice Materra: R$ 332,00</small>
+  </div>
+
+  <div class="frete-block">
+    <span class="frete-ico">🚚</span>
+    <span class="frete-text"><b>Frete:</b> contraparte arca (leilão reverso de frete será aberto após arremate)</span>
+  </div>
+
+  <div class="ficha-link">
+    <span>📋 Ver Ficha Materra anônima do anunciante</span>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="section-title">Detalhes da negociação</div>
+  <div class="section-body">
+    Leilão <b>Ascendente</b> (derivado de "Recebe pelo resíduo").<br>
+    Compradores dão lances acima de R$ 340/t. Vence o maior lance.<br>
+    Duração configurada: <b>48h após primeiro lance</b>.<br>
+    Anti-snipe ativo (prorroga 2 min se houver lance nos últimos 2 min).
+  </div>
+
+  <div class="section-title">Descrição do material</div>
+  <div class="section-body">
+    Aparas resultantes do processo de moagem de embalagens de cosmético pós-consumo.
+    Material já triado por cor (branco/transparente), lavado, isento de rótulos e tampas.
+    Umidade abaixo de 3%. Acondicionado em big bags de 500 kg.
+  </div>
+
+  <div class="section-title">Requisitos do interessado</div>
+  <div class="section-body">
+    <ul>
+      <li>Selo mínimo: <b>Bronze</b></li>
+      <li>Score mínimo: <b>30</b></li>
+      <li>Documentos: LO ambiental válida, CTF/APP-IBAMA ativo</li>
+      <li>Distância máxima: 300 km</li>
+    </ul>
+  </div>
+
+  <div class="section-title">Detalhes adicionais (campo livre)</div>
+  <div class="section-body" style="font-style:italic; color:var(--gray-700);">
+    "Preferência por retirada quinzenal em caminhão truck. Doca disponível.
+    Aceito apenas empresas com histórico de reciclagem; não vendo para coprocessamento."
+  </div>
+
+  <div class="section-title">Avaliações anônimas do anunciante</div>
+  <div class="avaliacao-item">
+    <span class="stars">★★★★★</span>"Cumpriu prazo, sem surpresas no material."
+    <span class="anon">— anônimo</span><span class="date">12/06/2026</span>
+  </div>
+  <div class="avaliacao-item">
+    <span class="stars">★★★★☆</span>"Tudo certo, só pequena divergência de peso na primeira coleta."
+    <span class="anon">— anônimo</span><span class="date">03/05/2026</span>
+  </div>
+
+  <div class="card-metrics">
+    <span>👁 234 visualizações</span><span>🔍 47 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade × período<br><b>R$ 48.960,00</b> (12 meses)</div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Minimizar</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Itens novos do maximizado</h4>
+<ul>
+<li><b>Bloco azul "🚚 Frete":</b> dedicado e visível, mostra explicitamente quem arca (contraparte ou anunciante).</li>
+<li><b>Link de Ficha Materra ANÔNIMA</b> do anunciante (sem nome, sem CNPJ — vide PARTE 9).</li>
+<li><b>Avaliações anônimas:</b> mostram a nota, o comentário, "— anônimo" e a data. Quem escreveu é sempre oculto.</li>
+<li><b>Botão "?" ao lado do selo</b> abre modal explicando selo + score (vide PARTE 17).</li>
+<li>Tudo o resto vem do formulário de anúncio.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 7 — Card MAXIMIZADO · Oferta de Controlador</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Card maximizado — Oferta · Controlador</span>
+<div class="card card-max">
+  <div class="card-header">
+    <div>
+      <span class="badge-tipo badge-oferta">Oferta</span>
+      <span style="display:block; font-size:9px; color:var(--gray-500); margin-top:3px; letter-spacing:0.5px;">VIA CONTROLADOR</span>
+    </div>
+    <div class="header-right">
+      <div class="selos-2x">
+        <div class="selo-mini">
+          <span style="font-size:8px;">Controlador</span>
+          <span class="selo-pill bronze" style="font-size:9.5px;">⭐ Bronze · 35 <button class="help-tooltip" style="width:13px;height:13px;font-size:9px;">?</button></span>
+        </div>
+        <div class="selo-mini">
+          <span style="font-size:8px;">Empresa</span>
+          <span class="selo-pill ouro" style="font-size:9.5px;">⭐ Ouro · 78 <button class="help-tooltip" style="width:13px;height:13px;font-size:9px;">?</button></span>
+        </div>
+      </div>
+      <button class="fav-btn" title="Favoritar">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Borra de tinta industrial (caldeira)</div>
+  <div class="card-subtitle">Tintas · 08 01 11 · <span style="color:var(--red);font-weight:700;">Classe I (perigoso)</span></div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>3,5 t</b>/única</div>
+    <div class="info-row"><span class="ico">📅</span> Coleta única</div>
+    <div class="info-row"><span class="ico">📍</span> Betim/MG · 220 km</div>
+    <div class="info-row"><span class="ico">🏷️</span> Paga pela destinação</div>
+  </div>
+  <div class="card-price">
+    <span>💰 R$ 2.800,00 / tonelada</span>
+    <small>Índice Materra: R$ 3.100,00</small>
+  </div>
+
+  <div class="frete-block">
+    <span class="frete-ico">🚚</span>
+    <span class="frete-text"><b>Frete:</b> anunciante arca (não haverá leilão reverso — frete já incluso)</span>
+  </div>
+
+  <div class="ficha-link">
+    <span>📋 Ver Ficha anônima do Controlador <span style="color:var(--gray-500);font-weight:400;">(Bronze · 35)</span></span>
+    <span class="arrow">→</span>
+  </div>
+  <div class="ficha-link">
+    <span>🏭 Ver Ficha anônima da empresa representada <span style="color:var(--gray-500);font-weight:400;">(Ouro · 78)</span></span>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="section-title">Detalhes da negociação</div>
+  <div class="section-body">
+    Leilão <b>Descendente</b> (derivado de "Paga pela destinação").<br>
+    Destinadores ofertam abaixo ou igual a R$ 2.800/t. Vence o menor cobrado.<br>
+    Duração: <b>72h após primeiro lance</b>. Anti-snipe ativo.
+  </div>
+
+  <div class="section-title">Descrição do material</div>
+  <div class="section-body">
+    Borra acumulada no fundo da caldeira de tintas base solvente — operação parada para
+    manutenção. FISPQ anexada. Necessita destinação Classe I com CADRI vigente.
+  </div>
+
+  <div class="section-title">Requisitos do interessado</div>
+  <div class="section-body">
+    <ul>
+      <li>Selo mínimo: <b>Prata</b></li>
+      <li>Score mínimo: <b>50</b></li>
+      <li>Documentos: <b>CADRI</b> obrigatório, LO Coprocessamento, MOPP do motorista</li>
+      <li>Distância máxima: 500 km</li>
+    </ul>
+  </div>
+
+  <div class="section-title">Avaliações anônimas do Controlador</div>
+  <div class="avaliacao-item">
+    <span class="stars">★★★★★</span>"Documentação impecável, conduziu a operação até o fim."
+    <span class="anon">— anônimo</span><span class="date">02/04/2026</span>
+  </div>
+  <div class="section-title">Avaliações anônimas da empresa representada</div>
+  <div class="avaliacao-item">
+    <span class="stars">★★★★★</span>"Carga conforme descrição."
+    <span class="anon">— anônimo</span><span class="date">17/03/2026</span>
+  </div>
+
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade<br><b>R$ 9.800,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Minimizar</button>
+    <button class="btn btn-primary">Negociar</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Particularidades</h4>
+<ul>
+<li><b>2 links de Ficha anônima:</b> uma do Controlador, outra da empresa representada. <b>Nenhuma das duas revela nome ou CNPJ.</b></li>
+<li><b>Avaliações anônimas duplicadas:</b> uma seção pra cada Ficha (cada uma carrega o histórico do seu CPF/CNPJ).</li>
+<li><b>Frete neste exemplo é arcado pelo anunciante</b> (sem leilão reverso).</li>
+<li>Classe I em vermelho no subtítulo.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 8 — Card Coleta Emergencial</div>
+<div class="row">
+<div class="card-wrap">
+<span class="card-label">Card mínimo — Coleta emergencial</span>
+<div class="card" style="border:2px solid var(--red);">
+  <div class="card-header">
+    <div>
+      <span class="badge-tipo badge-oferta">Oferta</span>
+      <span class="badge-tipo badge-urgent">🚨 URGENTE</span>
+    </div>
+    <div class="header-right">
+      <div class="selo-block">
+        <span class="selo-label">Fornecedor</span>
+        <span class="selo-pill ouro">⭐ Ouro · 81</span>
+      </div>
+      <button class="fav-btn">♡</button>
+    </div>
+  </div>
+  <div class="card-title">Lodo de ETE — retirada em 24h</div>
+  <div class="card-subtitle">Lodos · 19 08 12 · Classe IIA</div>
+  <div class="card-info">
+    <div class="info-row"><span class="ico">⚖️</span><b>8 t</b>/única</div>
+    <div class="info-row"><span class="ico">⏰</span> Retirar até 17/06 14h</div>
+    <div class="info-row"><span class="ico">📍</span> 54 km de você</div>
+    <div class="info-row"><span class="ico">🏷️</span> Paga pela destinação</div>
+  </div>
+  <div class="card-price" style="background:var(--red-soft); border-color:var(--red);">
+    <span>💰 R$ 380,00 / tonelada</span>
+    <small style="color:var(--red);">⏱ 18h 47min restantes</small>
+  </div>
+  <div class="card-metrics">
+    <span>👁 412 visualizações</span><span>🔍 89 viram detalhes</span>
+  </div>
+  <div class="card-footer">
+    <div class="card-total">Preço × quantidade<br><b>R$ 3.040,00</b></div>
+  </div>
+  <div class="card-actions">
+    <button class="btn btn-secondary">Ver detalhes</button>
+    <button class="btn btn-primary" style="background:var(--red); color:var(--white);">Negociar agora</button>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Modificador "Coleta emergencial"</h4>
+<ul>
+<li>Borda vermelha + badge pulsante + cronômetro vermelho.</li>
+<li>Botão "Negociar agora" em vermelho.</li>
+<li><b>Sempre no topo da vitrine</b> (regra de exibição).</li>
+<li>Pode ser de Oferta (resíduo parado, paga pra alguém retirar) ou Demanda (destinador licenciado precisa de Classe I, paga pra captar).</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 9 — Ficha Materra via CARD (ANÔNIMA) · Fornecedor</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha aberta a partir do card — TOTALMENTE ANÔNIMA</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Fornecedor</span>
+    <div class="anon-mark">Anunciante anônimo</div>
+    <div class="loc">📍 Região metropolitana de Belo Horizonte/MG</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Fornecedor de resíduo</span>
+        <div class="score-line">
+          <span class="selo-pill prata">⭐ Prata · 62</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Tipos de documento em posse</h4>
+    <div>
+      <span class="doc-possui">LO de Geração</span>
+      <span class="doc-possui">CTF/APP-IBAMA</span>
+      <span class="doc-possui">PGRS</span>
+      <span class="doc-possui">AVCB</span>
+    </div>
+    <div style="font-size:11px; color:var(--gray-500); margin-top:6px; font-style:italic;">
+      Apenas tipos de documento. Números, validades e arquivos só aparecem no Buscador de Licenças.
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div style="margin-bottom:6px;">
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span>
+        "Material conforme descrição, pesagem ok."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">12/06/2026</span>
+      </div>
+      <div>
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★☆</span>
+        "Pequeno atraso na disponibilização, no resto tudo ok."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">03/05/2026</span>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Selo Materra reflete documentação verificada; não substitui due diligence própria do usuário.<br>
+    Identificação completa do anunciante só após pagamento da Taxa Lead.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Ficha via Card = anti-desintermediação 100%</h4>
+<ul>
+<li><b>"Anunciante anônimo"</b> no lugar da razão social. Sem CNPJ. Sem endereço completo.</li>
+<li>Localização aparece como <b>"Região metropolitana de X"</b> — granularidade reduzida.</li>
+<li><b>Tipos de documento sim</b> ("Possui LO de Geração"), <b>número e arquivo não</b>.</li>
+<li><b>Sem histórico agregado</b> de operações (não aparece em nenhuma ficha, nem via card nem via Buscador). Histórico vive só no painel privado do dono.</li>
+<li>Avaliações anônimas com "anônimo" marcado claramente.</li>
+<li>Botão <b>"?" abre modal explicando selo e score</b> (vide PARTE 17).</li>
+<li>Disclaimer reforça: <b>identidade só após Taxa Lead</b>.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 10 — Ficha Materra via CARD (ANÔNIMA) · Comprador</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Card — Comprador (anônima)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Comprador</span>
+    <div class="anon-mark">Anunciante anônimo</div>
+    <div class="loc">📍 Grande São Paulo/SP</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Comprador / Destinador</span>
+        <div class="score-line">
+          <span class="selo-pill ouro">⭐ Ouro · 81</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Tipos de documento em posse</h4>
+    <div>
+      <span class="doc-possui">LO de Reciclagem</span>
+      <span class="doc-possui">LO Coprocessamento</span>
+      <span class="doc-possui">CADRI (Classe I)</span>
+      <span class="doc-possui">CTF/APP-IBAMA</span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Pagamento em dia, sem atrasos." <span class="anon-tag">anônimo</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Identificação completa do anunciante só após pagamento da Taxa Lead.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Diferenças do Fornecedor</h4>
+<ul>
+<li>Tag <b>"Comprador"</b> no header e chip "Comprador / Destinador" na faixa amarela.</li>
+<li>Tipos de documento típicos do Comprador (LO Reciclagem, LO Coprocessamento, CADRI).</li>
+<li>Resto idêntico ao Fornecedor: tipos de documento + avaliações anônimas + ? + disclaimer.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 11 — Ficha Materra via CARD (ANÔNIMA) · Controlador (só selo + score)</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Card — Controlador (anônima · só selo + score + avaliações)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Controlador</span>
+    <div class="anon-mark">Anunciante anônimo</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Controlador (intermediador)</span>
+        <div class="score-line">
+          <span class="selo-pill bronze">⭐ Bronze · 35</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div style="margin-bottom:6px;">
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span>
+        "Documentação impecável, conduziu a operação até o fim."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">02/04/2026</span>
+      </div>
+      <div>
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★☆</span>
+        "Bem atencioso, respondeu rápido."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">11/02/2026</span>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Ficha do Controlador exibe apenas selo, score e avaliações anônimas.<br>
+    Documentos e empresas representadas só ficam disponíveis para o próprio Controlador no painel privado.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Regra: Controlador só mostra selo + score + avaliações</h4>
+<ul>
+<li><b>Sem tipos de documento</b> (nem como categoria genérica).</li>
+<li><b>Sem histórico agregado</b> (operações, taxa, média).</li>
+<li><b>Sem lista de empresas representadas</b> na ficha pública.</li>
+<li>Disclaimer próprio explica a limitação.</li>
+<li>Vale tanto na vitrine (via card) quanto no Buscador de Licenças.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 12 — Ficha Materra via CARD (ANÔNIMA) · Transportadora (só selo + score)</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Card — Transportadora (anônima · só selo + score + avaliações)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Transportadora</span>
+    <div class="anon-mark">Transportadora anônima</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Transportadora</span>
+        <div class="score-line">
+          <span class="selo-pill prata">⭐ Prata · 67</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div style="margin-bottom:6px;">
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span>
+        "Pontual, motorista cordial. CT-e em ordem."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">22/05/2026</span>
+      </div>
+      <div>
+        <span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★☆</span>
+        "Cumpriu prazo, levou ligeiro atraso de 1h."
+        <span class="anon-tag">anônimo</span>
+        <span style="color:var(--gray-500);font-size:10.5px; margin-left:6px;">07/05/2026</span>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Ficha da Transportadora exibe apenas selo, score e avaliações anônimas.<br>
+    RNTRC, CRLV e demais documentos só são consultados no Buscador de Licenças.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Regra: Transportadora idêntica ao Controlador</h4>
+<ul>
+<li>Só selo + score + avaliações.</li>
+<li>Sem listagem de documentos, sem categorias de carga aceitas, sem frota.</li>
+<li>Mesmo padrão visual e disclaimer próprio.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 13 — Ficha Materra via CARD (ANÔNIMA) · Fornecedor + Comprador</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Card — perfil duplo (sem histórico combinado)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Fornecedor · Comprador</span>
+    <div class="anon-mark">Anunciante anônimo</div>
+    <div class="loc">📍 Norte de SC</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Fornecedor</span>
+        <div class="score-line"><span class="selo-pill prata">⭐ Prata · 64</span></div>
+      </div>
+      <div class="perfil-chip">
+        <span class="label">Comprador</span>
+        <div class="score-line"><span class="selo-pill ouro">⭐ Ouro · 76</span></div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Tipos de documento — Fornecedor</h4>
+    <div>
+      <span class="doc-possui">LO de Geração</span>
+      <span class="doc-possui">PGRS</span>
+      <span class="doc-possui">CTF/APP-IBAMA</span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Tipos de documento — Comprador</h4>
+    <div>
+      <span class="doc-possui">LO de Reciclagem</span>
+      <span class="doc-possui">CADRI (Classe I)</span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Operação tranquila." <span class="anon-tag">anônimo</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Mesma empresa atua em ambos perfis. Selo de cada perfil é independente.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Diferenças importantes</h4>
+<ul>
+<li><b>2 chips de perfil na faixa amarela,</b> cada um com seu selo e score independentes.</li>
+<li><b>Blocos de documentos separados por perfil.</b></li>
+<li><b>SEM bloco de "histórico combinado":</b> removido conforme regra. Histórico só aparece nas avaliações.</li>
+<li>Avaliações anônimas — uma lista única (não separa por perfil).</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 14 — Ficha via BUSCADOR DE LICENÇAS · Fornecedor</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Buscador — com nome, CNPJ e links pros documentos públicos</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Fornecedor · Buscador Público</span>
+    <div class="razao">PlastBrasil Indústria Ltda</div>
+    <div class="cnpj">12.345.678/0001-90</div>
+    <div class="loc">📍 Contagem/MG · Verificada na Receita</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Fornecedor de resíduo</span>
+        <div class="score-line">
+          <span class="selo-pill prata">⭐ Prata · 62</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Documentos públicos enviados à Materra Elo</h4>
+    <div class="doc-item">
+      <span class="doc-name">LO Ambiental (geração) — nº 12345/2024</span>
+      <span><span class="doc-valid">Válida até 12/2027</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">CTF/APP-IBAMA — nº 9876543</span>
+      <span><span class="doc-valid">Ativo</span><span class="doc-link">🔗 verificar IBAMA</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">PGRS</span>
+      <span><span class="doc-valid">Atualizado 03/2026</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">AVCB municipal</span>
+      <span><span class="doc-valid expiring">Vence em 08/2026</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Material conforme descrição." <span class="anon-tag">anônimo</span> <span style="color:var(--gray-500);font-size:10.5px;">12/06/2026</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Selo Materra reflete documentação verificada; não substitui due diligence própria do usuário.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Ficha via Buscador de Licenças</h4>
+<ul>
+<li><b>Acesso:</b> a partir do "Buscador de licenças" no cabeçalho do site. <b>Sem relação com nenhum anúncio.</b></li>
+<li><b>Razão social + CNPJ + UF/cidade</b> visíveis. Verificada na Receita.</li>
+<li><b>Documentos públicos com link para visualização</b> do PDF ou link de verificação no órgão público.</li>
+<li>Tag "Buscador Público" no header diferencia da ficha-via-card.</li>
+<li><b>Avaliações continuam anônimas</b> (regra vale em qualquer lugar).</li>
+<li>Botão "?" mantém o modal de explicação do selo.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 15 — Ficha via BUSCADOR DE LICENÇAS · Comprador</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Buscador — Comprador (com links de licenças)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Comprador · Buscador Público</span>
+    <div class="razao">Recicladora Verde S/A</div>
+    <div class="cnpj">98.765.432/0001-10</div>
+    <div class="loc">📍 São Paulo/SP · Verificada na Receita</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Comprador / Destinador</span>
+        <div class="score-line">
+          <span class="selo-pill ouro">⭐ Ouro · 81</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Documentos públicos enviados à Materra Elo</h4>
+    <div class="doc-item">
+      <span class="doc-name">LO Reciclagem — nº 7788/2024</span>
+      <span><span class="doc-valid">Válida até 09/2028</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">LO Coprocessamento — nº 2210/2025</span>
+      <span><span class="doc-valid">Válida até 04/2027</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">CADRI (Classe I) — nº 5544/2024</span>
+      <span><span class="doc-valid">Válida até 06/2027</span><span class="doc-link">📄 ver PDF</span></span>
+    </div>
+    <div class="doc-item">
+      <span class="doc-name">CTF/APP-IBAMA — nº 1122334</span>
+      <span><span class="doc-valid">Ativo</span><span class="doc-link">🔗 verificar IBAMA</span></span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Pagamento em dia." <span class="anon-tag">anônimo</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Selo reflete documentação verificada; não substitui due diligence própria.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Mesmo padrão do Fornecedor</h4>
+<ul>
+<li>Nome real + CNPJ visíveis.</li>
+<li>Lista de documentos típicos do Comprador, cada um com link de ver PDF ou verificar no órgão.</li>
+<li>Avaliações continuam anônimas.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 16 — Ficha via BUSCADOR · Controlador e Transportadora (só selo + score)</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Buscador — Controlador (só selo + score + avaliações)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Controlador · Buscador Público</span>
+    <div class="razao">João Pedro Almeida</div>
+    <div class="cnpj">CPF 123.456.789-00</div>
+    <div class="loc">📍 Belo Horizonte/MG · Verificado</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Controlador (intermediador)</span>
+        <div class="score-line">
+          <span class="selo-pill bronze">⭐ Bronze · 35</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Documentação impecável." <span class="anon-tag">anônimo</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Ficha do Controlador exibe apenas selo, score e avaliações anônimas — mesmo no Buscador.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Controlador no Buscador</h4>
+<ul>
+<li><b>Nome e CPF aparecem</b> (porque é busca por identificação).</li>
+<li><b>Mas nada além de selo + score + avaliações.</b></li>
+<li>Sem documentos públicos, sem listagem de empresas representadas.</li>
+</ul>
+</div>
+</div>
+
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Ficha via Buscador — Transportadora (só selo + score + RNTRC)</span>
+<div class="ficha">
+  <div class="ficha-header">
+    <span class="ficha-tag">Transportadora · Buscador Público</span>
+    <div class="razao">TransLogis Cargas Ltda</div>
+    <div class="cnpj">22.334.455/0001-66</div>
+    <div class="loc">📍 Curitiba/PR · Verificada na Receita</div>
+  </div>
+  <div class="ficha-perfis">
+    <div class="perfil-chips">
+      <div class="perfil-chip">
+        <span class="label">Transportadora</span>
+        <div class="score-line">
+          <span class="selo-pill prata">⭐ Prata · 67</span>
+        </div>
+      </div>
+    </div>
+    <button class="help-tooltip">?</button>
+  </div>
+  <div class="ficha-block">
+    <h4>Documentos básicos</h4>
+    <div class="doc-item">
+      <span class="doc-name">RNTRC — nº 12345678</span>
+      <span><span class="doc-valid">Ativo na ANTT</span><span class="doc-link">🔗 verificar ANTT</span></span>
+    </div>
+  </div>
+  <div class="ficha-block">
+    <h4>Avaliações anônimas recentes</h4>
+    <div style="font-size:12px; color:var(--gray-700); padding:6px 0;">
+      <div><span class="stars" style="color:var(--yellow-deep);font-weight:700;">★★★★★</span> "Pontual." <span class="anon-tag">anônimo</span></div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    Ficha da Transportadora exibe identificação, RNTRC, selo, score e avaliações anônimas.
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Transportadora no Buscador</h4>
+<ul>
+<li>Nome, CNPJ e <b>RNTRC com link de verificação na ANTT</b> aparecem.</li>
+<li>Demais documentos da frota (CRLV de cada veículo, MOPP do motorista, apólice) não são listados publicamente — só são checados no momento do convite.</li>
+<li>Selo + score + avaliações anônimas.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 17 — Modal "?" que aparece em qualquer Ficha (vitrine ou Buscador)</div>
+<div class="row-wide">
+<div class="card-wrap">
+<span class="card-label">Popup ao clicar no botão "?"</span>
+<div class="modal-mock">
+  <div class="modal-header">
+    O que selo e score significam?
+    <span class="modal-close">×</span>
+  </div>
+  <div class="modal-body">
+    <h5>Selo Materra</h5>
+    <p style="margin-bottom:8px;">É a faixa de confiabilidade do usuário com base nos documentos verificados e no histórico:</p>
+    <div class="selo-table">
+      <div class="stbl-pill" style="background:var(--gray-100); color:var(--gray-700);">Sem selo</div><div>Score de 0 a 19. Conta nova ou sem documentos validados.</div>
+      <div class="stbl-pill" style="background:#F7E5D2; color:#7A4A20;">Bronze</div><div>Score de 20 a 49. Documentação básica em ordem.</div>
+      <div class="stbl-pill" style="background:#ECECEC; color:#444;">Prata</div><div>Score de 50 a 74. Documentação completa e histórico positivo.</div>
+      <div class="stbl-pill" style="background:#FFF1B3; color:#6A5000;">Ouro</div><div>Score de 75 a 100. Padrão máximo de documentação, histórico e avaliação.</div>
+    </div>
+
+    <h5>Score Materra</h5>
+    <p style="margin-bottom:4px;">É a nota de 0 a 100 calculada pela fórmula:</p>
+    <div class="formula">
+      Score = (Documentos × <b>0,30</b>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;+ (Taxa de Confirmação × <b>0,40</b>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;+ (Histórico de Operação × <b>0,20</b>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;+ (Qualificação × <b>0,10</b>)
+    </div>
+    <ul style="margin-left:20px; margin-top:6px;">
+      <li><b>Documentos:</b> diversidade e validade dos documentos verificados.</li>
+      <li><b>Taxa de Confirmação:</b> proporção de operações que efetivamente fecharam após interesse pago.</li>
+      <li><b>Histórico de Operação:</b> volume e diversidade de operações concluídas.</li>
+      <li><b>Qualificação:</b> cursos, certificações (CREA, NR-35) e avaliações recebidas.</li>
+    </ul>
+
+    <h5>Disclaimer obrigatório</h5>
+    <p style="font-style:italic; color:var(--gray-700);">
+      Selo Materra reflete documentação verificada; <b>não substitui due diligence própria do usuário</b>.
+      A Materra Elo atua como marketplace de aproximação — não garante qualquer aspecto da operação entre as partes.
+    </p>
+  </div>
+</div>
+</div>
+<div class="annot">
+<h4>Modal "?"</h4>
+<ul>
+<li><b>Aparece em qualquer Ficha Materra</b> (via card ou via Buscador), em todos os perfis.</li>
+<li>Botão "?" pequeno e arredondado, preto com "?" amarelo, ao lado dos selos.</li>
+<li>Clique abre este popup centralizado.</li>
+<li>Conteúdo: faixas de selo + fórmula do score + disclaimer.</li>
+<li>Fechar com "×" no canto, clique fora ou tecla ESC.</li>
+</ul>
+</div>
+</div>
+
+<!-- ====================================================================== -->
+<div class="section">PARTE 18 — Regras importantes (resumo pro Antigravity)</div>
+<div class="rules-block">
+<h3>Regras de negócio que regem cards e fichas</h3>
+
+<h4>1. Oferta e Demanda NÃO definem fluxo de dinheiro</h4>
+<ul>
+<li><b>Oferta</b> = "tenho esse resíduo, quero destinar". O anunciante pode <b>receber</b> pelo resíduo (ascendente, comum em sucata) <b>ou pagar</b> pela destinação (descendente, comum em passivos perigosos).</li>
+<li><b>Demanda</b> = "preciso desse resíduo, quero receber". O anunciante pode <b>pagar</b> pelo resíduo (ascendente, comum em recicladores) <b>ou receber</b> pelo serviço de destinação (descendente, comum em destinadores licenciados).</li>
+<li>A linha <code>🏷️ Recebe / Paga</code> no card é o que comunica o sentido do dinheiro, não o badge.</li>
+</ul>
+
+<h4>2. Anti-desintermediação — dois níveis de Ficha Materra</h4>
+<ul>
+<li><b>Ficha via Card (vitrine, dentro de qualquer anúncio):</b> 100% anônima. <b>"Anunciante anônimo"</b> no lugar do nome. Sem CNPJ. Localização genérica (região metropolitana). Tipos de documento liberados, números e PDFs <b>não</b>.</li>
+<li><b>Ficha via Buscador de Licenças (sem relação com anúncio):</b> nome real, CNPJ, cidade/UF, links pros documentos públicos enviados à Materra Elo. Selo, score e avaliações.</li>
+<li>Em <b>ambas as fichas</b>, as avaliações são <b>sempre anônimas</b> e referem-se ao anunciante.</li>
+<li>Identidade completa do anunciante só é revelada à contraparte <b>após pagamento da Taxa Lead</b> e clique de ambos em "Ver número do interessado".</li>
+</ul>
+
+<h4>3. Ficha de Controlador e de Transportadora — só selo + score + avaliações</h4>
+<ul>
+<li>Tanto <b>via card</b> quanto <b>via Buscador</b>, fichas de Controlador e Transportadora exibem apenas selo, score e avaliações anônimas.</li>
+<li>Documentos da Transportadora (CRLV, MOPP, apólice) e documentos das empresas representadas pelo Controlador <b>nunca aparecem publicamente</b> — são checados internamente no momento do convite ou da intermediação.</li>
+<li>A única exceção é o <b>RNTRC</b> da Transportadora no Buscador, com link de verificação na ANTT.</li>
+</ul>
+
+<h4>4. Audit Trail é 100% privada</h4>
+<ul>
+<li><b>Audit Trail nunca é pública.</b> Só as partes da operação (fornecedor, comprador, transportadora vencedora, controlador quando aplicável) podem visualizar.</li>
+<li>Botão "Ver minha Audit Trail" só aparece no card fechado para usuários que participaram da operação.</li>
+<li>Admin pode visualizar para fins de moderação, <b>mas não pode editar nem apagar</b>.</li>
+</ul>
+
+<h4>5. Avaliações são sempre anônimas e são feitas para o anunciante</h4>
+<ul>
+<li>Quem avaliou nunca é revelado.</li>
+<li>Cada avaliação carrega: estrelas (1 a 5), comentário (opcional), tag "anônimo" e data.</li>
+<li>Avaliações são <b>direcionadas ao anunciante</b> (Fornecedor, Comprador, Controlador ou Transportadora avaliada).</li>
+<li>No caso de Controlador, há duas trilhas separadas: avaliações do Controlador e avaliações da empresa representada (ambas anônimas).</li>
+</ul>
+
+<h4>6. Botão "?" em qualquer ficha</h4>
+<ul>
+<li>Sempre presente ao lado dos selos.</li>
+<li>Abre modal padrão com: faixas de selo (Sem selo / Bronze / Prata / Ouro), fórmula do score (Documentos 30% + Taxa de Confirmação 40% + Histórico 20% + Qualificação 10%) e disclaimer.</li>
+<li>Visual idêntico em qualquer contexto (vitrine, buscador, ficha logada).</li>
+</ul>
+
+<h4>7. Card maximizado mostra frete em bloco dedicado</h4>
+<ul>
+<li>Bloco azul próprio com ícone 🚚 e texto: <b>"Frete: anunciante arca"</b> ou <b>"Frete: contraparte arca (leilão reverso será aberto após arremate)"</b>.</li>
+<li>Coerente com a Seção 7 do formulário ("Quem arca pelo leilão reverso de frete").</li>
+<li>Se for <b>Logística Própria</b>, bloco diz: <b>"Frete: Logística Própria — frete já incluso, sem leilão"</b>.</li>
+</ul>
+
+<h4>8. Ficha de perfil duplo (Fornecedor + Comprador) — sem histórico combinado</h4>
+<ul>
+<li>Dois chips de selo independentes na faixa amarela.</li>
+<li>Blocos de tipos de documento separados por perfil.</li>
+<li><b>Sem bloco "Histórico combinado".</b> Só os blocos de tipos de documento + avaliações anônimas.</li>
+</ul>
+
+<h4>9. Documento vencido</h4>
+<ul>
+<li>Quando uma licença vence, o selo correspondente cai automaticamente e o score é recalculado.</li>
+<li>Sistema pede ao usuário envio do novo número do documento renovado.</li>
+<li>Anúncios ativos do usuário <b>não são suspensos automaticamente</b> pelo vencimento.</li>
+</ul>
+
+<h4>10. Histórico de operações nunca aparece em ficha pública</h4>
+<ul>
+<li><b>Nenhuma ficha</b> — nem via card (vitrine) nem via Buscador de Licenças — exibe histórico agregado (nº de operações concluídas, taxa de confirmação, avaliação média).</li>
+<li>O histórico vive <b>exclusivamente no painel privado do dono da conta</b>, junto da Audit Trail das operações que ele participou.</li>
+<li>O que aparece publicamente é apenas: <b>selo + score + avaliações anônimas</b> (e, no Buscador, nome/CNPJ + documentos com link para Fornecedor/Comprador, ou só RNTRC pra Transportadora).</li>
+<li>A nota "Histórico de Operação × 0,20" no modal "?" é só a explicação da fórmula do score — não é a exibição do histórico em si.</li>
+</ul>
+</div>
+
+</body>
+</html>
