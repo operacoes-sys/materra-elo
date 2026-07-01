@@ -2680,7 +2680,7 @@ export default function Home() {
   }
 
   const handleFreightSimulationTrigger = () => {
-    setPaywallModal('A funcionalidade de Cotação de Frete (Leilão Reverso) está bloqueada nesta versão da plataforma.')
+    router.push('/frete')
   }
 
   // Bid Freight Reverse Auction via WhatsApp (Free plan restrictions apply)
@@ -7197,6 +7197,14 @@ export default function Home() {
                                     <div><b>Acondicionamento:</b> {item.acondicionamento || 'N/A'}</div>
                                     <div><b>Infraestrutura Mínima:</b> {Array.isArray(item.infraestrutura_minima) ? item.infraestrutura_minima.join(', ') : item.infraestrutura_minima || 'N/A'}</div>
                                     <div><b>Características:</b> {item.caracteristicas || 'N/A'}</div>
+                                    <div><b>Regime:</b> {item.regime_fornecimento === 'CONTRATO' ? `Recorrente (Prazo: ${item.prazo_recorrencia || 'Não especificado'})` : 'Lote Único'}</div>
+                                    <div><b>Frequência de Coleta:</b> {item.frequencia || 'N/A'}</div>
+                                    <div><b>Quem arca com o Frete:</b> {item.quem_arca_frete === 'EU' || item.responsavel_frete ? 'Anunciante' : 'Contraparte (Leilão Reverso)'}</div>
+                                    <div><b>Disponibilidade:</b> {item.disponibilidade_imediata ? 'Imediata' : 'Sob agendamento'}</div>
+                                    <div><b>Urgência/Prazo:</b> {item.urgencia_prazo || 'Normal'}</div>
+                                    <div><b>Origem do Processo Gerador:</b> {item.origem_processo_gerador || 'N/A'}</div>
+                                    <div><b>Exigências Técnicas:</b> {item.especificacoes_tecnicas_exigencias || 'N/A'}</div>
+                                    <div><b>Observações/Outros:</b> {item.requisitos_adicionais_observacoes || item.observacoes || 'N/A'}</div>
                                   </div>
 
                                   {/* Requisitos */}

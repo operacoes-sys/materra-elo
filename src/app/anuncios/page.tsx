@@ -1381,14 +1381,22 @@ export default function VitrineAnunciosPage() {
                             🔬 Especificações Técnicas (Materra Elo)
                           </strong>
                           <div style={{ padding: '14px', fontSize: '0.9rem', color: '#ccc', background: '#0a0a0a', borderRadius: '6px', border: '1px solid #222', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
-                            <div><b>Grupo:</b> {item.grupo || 'N/A'}</div>
-                            <div><b>Categoria/Subcategoria:</b> {item.categoria_subcategoria || item.categoria || 'N/A'}</div>
-                            <div><b>Código IBAMA:</b> {item.codigo_ibama || 'N/A'}</div>
-                            <div><b>Classe:</b> {item.classe || item.classe_residuo || 'N/A'}</div>
-                            <div><b>Volume Total:</b> {item.volume_total || item.quantidade} {item.unidade || 't'}</div>
-                            <div><b>Acondicionamento:</b> {item.acondicionamento || 'N/A'}</div>
-                            <div><b>Infraestrutura Mínima:</b> {Array.isArray(item.infraestrutura_minima) ? item.infraestrutura_minima.join(', ') : item.infraestrutura_minima || 'N/A'}</div>
-                            <div><b>Características:</b> {item.caracteristicas || 'N/A'}</div>
+                             <div><b>Grupo:</b> {item.grupo || 'N/A'}</div>
+                             <div><b>Categoria/Subcategoria:</b> {item.categoria_subcategoria || item.categoria || 'N/A'}</div>
+                             <div><b>Código IBAMA:</b> {item.codigo_ibama || 'N/A'}</div>
+                             <div><b>Classe:</b> {item.classe || item.classe_residuo || 'N/A'}</div>
+                             <div><b>Volume Total:</b> {item.volume_total || item.quantidade} {item.unidade || 't'}</div>
+                             <div><b>Acondicionamento:</b> {item.acondicionamento || 'N/A'}</div>
+                             <div><b>Infraestrutura Mínima:</b> {Array.isArray(item.infraestrutura_minima) ? item.infraestrutura_minima.join(', ') : item.infraestrutura_minima || 'N/A'}</div>
+                             <div><b>Características:</b> {item.caracteristicas || 'N/A'}</div>
+                             <div><b>Regime:</b> {item.regime_fornecimento === 'CONTRATO' ? `Recorrente (Prazo: ${item.prazo_recorrencia || 'Não especificado'})` : 'Lote Único'}</div>
+                             <div><b>Frequência de Coleta:</b> {item.frequencia || 'N/A'}</div>
+                             <div><b>Quem arca com o Frete:</b> {item.quem_arca_frete === 'EU' || item.responsavel_frete ? 'Anunciante' : 'Contraparte (Leilão Reverso)'}</div>
+                             <div><b>Disponibilidade:</b> {item.disponibilidade_imediata ? 'Imediata' : 'Sob agendamento'}</div>
+                             <div><b>Urgência/Prazo:</b> {item.urgencia_prazo || 'Normal'}</div>
+                             <div><b>Origem do Processo Gerador:</b> {item.origem_processo_gerador || 'N/A'}</div>
+                             <div><b>Exigências Técnicas:</b> {item.especificacoes_tecnicas_exigencias || 'N/A'}</div>
+                             <div><b>Observações/Outros:</b> {item.requisitos_adicionais_observacoes || item.observacoes || 'N/A'}</div>
                           </div>
                         </div>
 

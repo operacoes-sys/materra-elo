@@ -317,6 +317,7 @@ export default function PublicarAnuncioPage() {
   const [formaNegociacao, setFormaNegociacao] = useState<'EU RECEBO' | 'EU PAGO' | 'DOAÇÃO'>('EU RECEBO')
   const [valorDesejado, setValorDesejado] = useState('')
   const [opcaoDoacaoInteressados, setOpcaoDoacaoInteressados] = useState<'Leilão ASCENDENTE' | 'Leilão DESCENDENTE'>('Leilão ASCENDENTE')
+  const [salaLeilaoHabilitada, setSalaLeilaoHabilitada] = useState(true)
 
   // Real-time index state variables
   const [valorIndexRealTime, setValorIndexRealTime] = useState<number>(340)
@@ -669,6 +670,7 @@ export default function PublicarAnuncioPage() {
       let payload = {
         id_cadastro: user.id,
         id_ficha_empresa: idFichaEmpresa || null,
+        habilitar_sala_leilao: formaNegociacao === 'DOAÇÃO' ? false : salaLeilaoHabilitada,
         codigo,
         titulo: tituloAnuncio || actualResiduo,
         tipo_anuncio: tipoAnuncio,
@@ -2295,14 +2297,20 @@ export default function PublicarAnuncioPage() {
                       )
                     })()}
                     
-                    <div style={{ marginTop: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
-                        ⚡ TIPO DE LEILÃO (Preenchido Automaticamente)
-                      </span>
-                      <p style={{ color: '#fff', fontSize: '0.95rem', margin: 0, fontWeight: 'bold' }}>
-                        {formaNegociacao === 'EU RECEBO' ? '📈 Leilão Ascendente (Quem oferecer o maior lance comercial vence)' : '📉 Leilão Descendente (Quem oferecer o menor preço de destinação vence)'}
-                      </p>
                     </div>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#fff', marginTop: '16px', borderTop: '1px solid #222', paddingTop: '16px' }}>
+                      <input
+                        type="checkbox"
+                        checked={salaLeilaoHabilitada}
+                        onChange={e => setSalaLeilaoHabilitada(e.target.checked)}
+                        style={{ accentColor: 'var(--primary-500)' }}
+                      />
+                      <strong style={{ color: 'var(--primary-500)' }}>Habilitar Sala de Leilão / Negociação Dinâmica (R$ 20 / R$ 80)</strong>
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: '#888', display: 'block', marginLeft: '22px', marginTop: '4px' }}>
+                      Se desativado, o anúncio não terá disputa de lances. Os interessados farão o desbloqueio direto do seu contato por R$ 45,00.
+                    </span>
                   </div>
                 </div>
               ) : (
