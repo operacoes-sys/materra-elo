@@ -20,15 +20,22 @@ const LogoBrand = () => (
 )
 
 // Real-time ticking Countdown Timer component for auctions
-const LeilaoTimer = ({ dias }: { dias: number }) => {
+const LeilaoTimer = ({ dias, endDate }: { dias?: number; endDate?: string }) => {
   const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
-    // Calculate target date when mounted (today at midnight + X days)
-    const targetDate = new Date()
-    targetDate.setHours(0, 0, 0, 0)
-    targetDate.setDate(targetDate.getDate() + dias)
-    const targetMs = targetDate.getTime()
+    let targetMs = 0
+    if (endDate) {
+      targetMs = new Date(endDate).getTime()
+    } else if (dias !== undefined) {
+      const targetDate = new Date()
+      targetDate.setHours(0, 0, 0, 0)
+      targetDate.setDate(targetDate.getDate() + dias)
+      targetMs = targetDate.getTime()
+    } else {
+      setTimeLeft('Sem data')
+      return
+    }
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -43,13 +50,17 @@ const LeilaoTimer = ({ dias }: { dias: number }) => {
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const s = Math.floor((diff % (1000 * 60)) / 1000)
 
-      setTimeLeft(`Restam ${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
+      if (d > 0) {
+        setTimeLeft(`Restam ${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
+      } else {
+        setTimeLeft(`Restam ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`)
+      }
     }
 
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
-  }, [dias])
+  }, [dias, endDate])
 
   return (
     <span style={{ color: 'var(--primary-500)', fontWeight: 'bold', fontFamily: 'monospace' }}>
@@ -1429,9 +1440,19 @@ const NegotiationCard = ({ item, type, onPaySuperTaxa }: {
             </span>
           </>
         ) : (
-          <span style={{ display: 'block', fontSize: '0.78rem', color: '#aaa', lineHeight: '1.4' }}>
-            <strong>Quantidade:</strong> {item.quantidade} {item.unidade}
-          </span>
+          <>
+            <span style={{ display: 'block', fontSize: '0.78rem', color: '#aaa', lineHeight: '1.4' }}>
+              <strong>Quantidade:</strong> {item.quantidade} {item.unidade}
+            </span>
+            {item.lead_liberado && item.cadastros && (
+              <div style={{ marginTop: '10px', background: '#0d0d0d', border: '1px solid var(--primary-500)', padding: '10px 12px', borderRadius: '4px', fontSize: '0.8rem', color: '#ccc' }}>
+                <strong style={{ color: 'var(--primary-500)', display: 'block', marginBottom: '4px' }}>👤 Contato do Anunciante:</strong>
+                <div>🏢 Empresa: {item.cadastros.nome_ou_razao}</div>
+                <div>📧 E-mail: {item.cadastros.email || 'Não informado'}</div>
+                <div>📞 WhatsApp: {item.cadastros.whatsapp || 'Não informado'}</div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -1520,30 +1541,14 @@ export default function Home() {
   const [quickEditAd, setQuickEditAd] = useState<any>(null)
 
   const isNegotiationExpired = (item: any) => {
-    if (item.status === 'Finalizado' || item.status === 'Fechado' || item.status === 'Arrematado') return true
+    if (item.status === 'Finalizado' || item.status === 'Fechado' || item.status === 'Arrematado' || item.status === 'SUSPENSO') return true
     const pubTime = item.data_publicacao ? new Date(item.data_publicacao).getTime() : Date.now()
     const targetMs = pubTime + 172800000 // 48 hours
     return targetMs <= Date.now()
   }
 
   const handlePaySuperTaxa = async (item: any) => {
-    try {
-      const { error: errAd } = await supabase
-        .from('anuncios')
-        .update({ status: 'Finalizado' })
-        .eq('id', item.id)
-
-      if (errAd) throw errAd
-
-      alert('Super Taxa paga! Operação finalizada e movida para o Histórico de Auditoria / Cofre.')
-      if (user) {
-        fetchMyListings(user.id)
-        fetchListings()
-        loadReleasedContacts(user.id)
-      }
-    } catch (e: any) {
-      alert('Erro ao processar Super Taxa: ' + e.message)
-    }
+    triggerPixPayment(item, 'SUPER_CONTATO', 80)
   }
 
   // Document Upload States
@@ -1835,9 +1840,12 @@ export default function Home() {
   const [fichaModal, setFichaModal] = useState<any>(null)
   const [seloModal, setSeloModal] = useState(false)
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
+  const [pixPaymentModal, setPixPaymentModal] = useState<{ item: any; type: 'NORMAL' | 'SUPER_CONTATO'; amount: number } | null>(null)
   const [favorites, setFavorites] = useState<any[]>([])
   const [myListings, setMyListings] = useState<any[]>([])
   const [loadingMyListings, setLoadingMyListings] = useState(false)
+  const [incomingLeads, setIncomingLeads] = useState<any[]>([])
+  const [interactedAds, setInteractedAds] = useState<any[]>([])
   const [repCompanies, setRepCompanies] = useState<any[]>([])
   const [loadingRepCompanies, setLoadingRepCompanies] = useState(false)
 
@@ -2128,6 +2136,8 @@ export default function Home() {
         loadAuditLogs(userId)
         fetchMyListings(userId)
         loadReleasedContacts(userId)
+        loadIncomingLeads(userId)
+        loadInteractedAds(userId)
         if (data.subtipo === 'Corretor' || data.subtipo === 'Corretor/Controlador') {
           fetchRepCompanies(userId)
         }
@@ -2137,6 +2147,114 @@ export default function Home() {
       }
     } catch (err: any) {
       console.error('Erro ao buscar perfil do usuário:', err)
+    }
+  }
+
+  async function loadIncomingLeads(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('contatos')
+        .select(`
+          *,
+          usuario:id_usuario (
+            id,
+            nome_ou_razao,
+            whatsapp,
+            email,
+            cpf_ou_cnpj,
+            uf,
+            cidade,
+            tipo_parte,
+            subtipo
+          )
+        `)
+        .eq('id_contraparte', userId)
+
+      if (!error && data) {
+        setIncomingLeads(data)
+      }
+    } catch (e) {
+      console.error('Erro ao buscar leads recebidos:', e)
+    }
+  }
+
+  async function loadInteractedAds(userId: string) {
+    try {
+      // 1. Fetch contatos where user is buyer/visitor
+      const { data: contactsData, error: errCp } = await supabase
+        .from('contatos')
+        .select(`
+          *,
+          anuncio:id_anuncio (
+            *,
+            cadastros (
+              nome_ou_razao,
+              nivel_selo,
+              selo_verificado,
+              score_0a100,
+              subtipo,
+              tipo_parte,
+              whatsapp,
+              email
+            )
+          )
+        `)
+        .eq('id_usuario', userId)
+
+      if (errCp) throw errCp
+
+      // 2. Fetch propostas where user is proponente
+      const { data: propostasData, error: errPp } = await supabase
+        .from('propostas')
+        .select(`
+          *,
+          anuncio:id_anuncio (
+            *,
+            cadastros (
+              nome_ou_razao,
+              nivel_selo,
+              selo_verificado,
+              score_0a100,
+              subtipo,
+              tipo_parte,
+              whatsapp,
+              email
+            )
+          )
+        `)
+        .eq('id_proponente', userId)
+
+      if (errPp) throw errPp
+
+      // Merge ads from both sources
+      const adsMap = new Map<string, any>()
+      
+      contactsData?.forEach((c: any) => {
+        if (c.anuncio) {
+          const adWithMeta = { 
+            ...c.anuncio, 
+            lead_liberado: c.liberado, 
+            lead_tipo: c.tipo_lead, 
+            contact_record: c 
+          }
+          adsMap.set(c.anuncio.id, adWithMeta)
+        }
+      })
+
+      propostasData?.forEach((p: any) => {
+        if (p.anuncio && !adsMap.has(p.anuncio.id)) {
+          const adWithMeta = { 
+            ...p.anuncio, 
+            lead_liberado: false, 
+            lead_tipo: 'NORMAL' 
+          }
+          adsMap.set(p.anuncio.id, adWithMeta)
+        }
+      })
+
+      setInteractedAds(Array.from(adsMap.values()))
+    } catch (e) {
+      console.error('Erro ao buscar anúncios interagidos:', e)
     }
   }
 
@@ -2333,6 +2451,182 @@ export default function Home() {
       console.error('Erro ao buscar contatos liberados:', err)
     } finally {
       setLoadingContacts(false)
+    }
+  }
+
+  const triggerPixPayment = (item: any, type: 'NORMAL' | 'SUPER_CONTATO', amount: number) => {
+    setPixPaymentModal({ item, type, amount })
+  }
+
+  const handleConfirmPixPayment = async () => {
+    if (!pixPaymentModal || !user) return
+    const { item, type, amount } = pixPaymentModal
+
+    try {
+      // 1. Update/insert contatos table
+      const leadId = crypto.randomUUID()
+      const { error: errCp } = await supabase
+        .from('contatos')
+        .insert([{
+          id: leadId,
+          id_usuario: user.id,
+          id_contraparte: item.id_cadastro || '11111111-1111-1111-1111-111111111111',
+          id_anuncio: item.id,
+          liberado: type === 'SUPER_CONTATO',
+          taxa_lead_paga: true,
+          taxa_lead_valor: amount,
+          tipo_lead: type,
+          valor_pago: amount
+        }])
+
+      if (errCp) throw errCp
+
+      // 2. Calculate dates for room timer if active
+      let updateFields: any = { status: 'Em negociação', taxa_paga: true }
+      if (item.habilitar_sala_leilao) {
+        if (!item.data_abertura_leilao) {
+          const nowStr = new Date().toISOString()
+          const durationHrs = item.duracao_leilao_horas || 48
+          const endStr = new Date(Date.now() + durationHrs * 60 * 60 * 1000).toISOString()
+          updateFields.data_abertura_leilao = nowStr
+          updateFields.data_fim_real = endStr
+        }
+      }
+
+      // Update in Supabase anuncios table
+      const { error: errAd } = await supabase
+        .from('anuncios')
+        .update(updateFields)
+        .eq('id', item.id)
+
+      if (errAd) throw errAd
+
+      // 3. Create negotiation room in localStorage
+      try {
+        const activeRoomsStr = localStorage.getItem('materra_active_negotiations') || '[]'
+        const activeRooms = JSON.parse(activeRoomsStr)
+        const roomUuid = crypto.randomUUID()
+        const proponenteName = profile?.nome_ou_razao || user.email || 'Interessado'
+        const existingIndex = activeRooms.findIndex((r: any) => r.id_anuncio === item.id && r.id_proponente === user.id)
+        if (existingIndex === -1) {
+          activeRooms.push({
+            id: roomUuid,
+            id_anuncio: item.id,
+            id_proponente: user.id,
+            proponente_nome: proponenteName,
+            proponente_selo: profile?.nivel_selo || 'Bronze',
+            proponente_score: profile?.score_0a100 || 45,
+            created_at: new Date().toISOString(),
+            status: 'Ativa',
+            taxa_lead_paga: true,
+            taxa_lead_valor: amount,
+            mensagens: [
+              {
+                id: 'msg_1',
+                remetente_id: user.id,
+                remetente_nome: proponenteName,
+                texto: type === 'SUPER_CONTATO' 
+                  ? `Iniciando contato prioritário via Super Contato!` 
+                  : `Tenho interesse e entrei na sala de negociação.`,
+                tipo: 'PROPOSTA_INICIAL',
+                quantidade: item.quantidade || 0,
+                preco: item.valor_desejado || 0,
+                timestamp: new Date().toISOString()
+              }
+            ]
+          })
+          localStorage.setItem('materra_active_negotiations', JSON.stringify(activeRooms))
+        }
+      } catch (e) {
+        console.warn('Could not update active negotiations locally:', e)
+      }
+
+      // 4. Save to Audit Trail
+      try {
+        const auditTrailStr = localStorage.getItem('materra_compliance_audit_trail') || '[]'
+        const auditTrail = JSON.parse(auditTrailStr)
+        auditTrail.unshift({
+          event_type: 'LEAD_FEE_PAID',
+          event_category: 'Financeiro',
+          event_description: `Pagamento de Pix de R$ ${amount},00 simulado com sucesso para lead do anúncio [${item.codigo || item.id.substring(0, 6)}]. Tipo: ${type}`,
+          actor_id: user.id,
+          actor_name: profile?.nome_ou_razao || user.email,
+          timestamp: new Date().toISOString()
+        })
+        localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+      } catch (e) {
+        console.warn('Could not save to audit trail:', e)
+      }
+
+      alert(`Pagamento de R$ ${amount},00 processado com sucesso! A negociação foi registrada.`)
+      
+      // Reload states
+      fetchMyListings(user.id)
+      fetchListings()
+      loadReleasedContacts(user.id)
+      if (typeof loadIncomingLeads === 'function') {
+        loadIncomingLeads(user.id)
+      }
+      loadInteractedAds(user.id)
+      setPixPaymentModal(null)
+      
+      // Switch view to 'negocios' tab so user can see it in Meus Negócios!
+      setActiveView('negocios')
+
+    } catch (e: any) {
+      alert('Erro ao processar simulação de Pix: ' + e.message)
+    }
+  }
+
+  const handleCloseDeal = async (item: any, lead: any) => {
+    const confirmation = window.confirm(`Deseja fechar negócio definitivamente com ${lead.usuario?.nome_ou_razao || 'este interessado'}?`)
+    if (!confirmation) return
+
+    try {
+      // 1. Update anuncio status to SUSPENSO
+      const { error: errAd } = await supabase
+        .from('anuncios')
+        .update({ status: 'SUSPENSO' })
+        .eq('id', item.id)
+
+      if (errAd) throw errAd
+
+      // 2. Mark this specific contact lead as liberated
+      const { error: errCp } = await supabase
+        .from('contatos')
+        .update({ liberado: true })
+        .eq('id', lead.id)
+
+      if (errCp) throw errCp
+
+      // 3. Register Audit Trail Event
+      try {
+        const auditTrailStr = localStorage.getItem('materra_compliance_audit_trail') || '[]'
+        const auditTrail = JSON.parse(auditTrailStr)
+        auditTrail.unshift({
+          event_type: 'DEU_NEGOCIO',
+          event_category: 'Operacional',
+          event_description: `Negócio fechado e finalizado! Anunciante e interessado vencedor concordaram. ID Anúncio: [${item.codigo || item.id.substring(0, 6)}]. Status alterado para SUSPENSO e dados arquivados no Cofre.`,
+          actor_id: user.id,
+          actor_name: profile?.nome_ou_razao || user.email,
+          timestamp: new Date().toISOString()
+        })
+        localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+      } catch (e) {
+        console.warn('Could not register audit trail:', e)
+      }
+
+      alert('Negócio fechado com sucesso! Os dados foram arquivados permanentemente no Histórico / Cofre de Auditoria.')
+      
+      // Reload states
+      fetchMyListings(user.id)
+      fetchListings()
+      loadReleasedContacts(user.id)
+      loadIncomingLeads(user.id)
+      loadInteractedAds(user.id)
+
+    } catch (e: any) {
+      alert('Erro ao fechar negócio: ' + e.message)
     }
   }
 
@@ -3863,6 +4157,79 @@ export default function Home() {
                                   <p style={{ color: '#aaa', fontSize: '0.78rem', margin: '4px 0' }}>
                                     Qtd: {item.quantidade} {item.unidade} • Valor: R$ {item.valor_desejado?.toLocaleString('pt-BR')}
                                   </p>
+
+                                  {/* INTERESTED LEADS LIST */}
+                                  {(() => {
+                                    const adLeads = incomingLeads
+                                      .filter(l => l.id_anuncio === item.id)
+                                      .sort((a, b) => {
+                                        const tA = a.tipo_lead || 'NORMAL'
+                                        const tB = b.tipo_lead || 'NORMAL'
+                                        if (tA === 'SUPER_CONTATO' && tB !== 'SUPER_CONTATO') return -1
+                                        if (tA !== 'SUPER_CONTATO' && tB === 'SUPER_CONTATO') return 1
+                                        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                                      })
+
+                                    if (adLeads.length === 0) return null
+
+                                    return (
+                                      <div style={{ marginTop: '12px', borderTop: '1px solid #222', paddingTop: '10px' }}>
+                                        <span style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>
+                                          👥 Interessados em Contato ({adLeads.length})
+                                        </span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                          {adLeads.map(lead => {
+                                            const isSuper = lead.tipo_lead === 'SUPER_CONTATO'
+                                            const showDetails = lead.liberado || isSuper
+                                            return (
+                                              <div key={lead.id} style={{ background: '#1c1c1c', border: isSuper ? '1px solid #ffd700' : '1px solid #333', padding: '10px', borderRadius: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#fff' }}>
+                                                    {lead.usuario?.nome_ou_razao || 'Interessado Anônimo'}
+                                                  </span>
+                                                  <span style={{
+                                                    fontSize: '0.58rem', fontWeight 700, padding: '1px 5px', borderRadius: '3px',
+                                                    background: isSuper ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255,255,255,0.08)',
+                                                    color: isSuper ? '#ffd700' : '#ccc',
+                                                    border: isSuper ? '1px solid #ffd700' : '1px solid #444'
+                                                  }}>
+                                                    {isSuper ? '⚡ SUPER' : '🤝 NORMAL'}
+                                                  </span>
+                                                </div>
+
+                                                {showDetails ? (
+                                                  <div style={{ fontSize: '0.72rem', color: '#ccc', lineHeight: '1.4' }}>
+                                                    <div>🏢 Empresa: {lead.usuario?.nome_ou_razao || 'N/A'}</div>
+                                                    <div>📞 WhatsApp: <strong>{lead.usuario?.whatsapp || 'N/A'}</strong></div>
+                                                    <div>📧 Email: {lead.usuario?.email || 'N/A'}</div>
+                                                  </div>
+                                                ) : (
+                                                  <div style={{ fontSize: '0.7rem', color: '#888', fontStyle: 'italic' }}>
+                                                    🔒 Contato oculto (Entrou na disputa da sala)
+                                                  </div>
+                                                )}
+
+                                                {/* Select Contact/Deu Negócio button */}
+                                                {item.status !== 'SUSPENSO' && item.status !== 'Finalizado' && (
+                                                  <button
+                                                    onClick={() => handleCloseDeal(item, lead)}
+                                                    className="btn btn-primary"
+                                                    style={{
+                                                      width: '100%', marginTop: '6px', padding: '4px 8px', fontSize: '0.68rem',
+                                                      fontWeight: 'bold', background: 'var(--primary-500)', color: '#000',
+                                                      border: 'none', borderRadius: '3px', cursor: 'pointer'
+                                                    }}
+                                                  >
+                                                    🤝 SELECIONAR CONTATO / DEU NEGÓCIO
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </div>
+                                    )
+                                  })()}
                                   
                                   {isLocked ? (
                                     <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--primary-500)', background: 'rgba(255,215,0,0.05)', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,215,0,0.15)' }}>
@@ -3927,6 +4294,79 @@ export default function Home() {
                                     Qtd: {item.quantidade} {item.unidade} • Valor: R$ {item.valor_desejado?.toLocaleString('pt-BR')}
                                   </p>
 
+                                  {/* INTERESTED LEADS LIST */}
+                                  {(() => {
+                                    const adLeads = incomingLeads
+                                      .filter(l => l.id_anuncio === item.id)
+                                      .sort((a, b) => {
+                                        const tA = a.tipo_lead || 'NORMAL'
+                                        const tB = b.tipo_lead || 'NORMAL'
+                                        if (tA === 'SUPER_CONTATO' && tB !== 'SUPER_CONTATO') return -1
+                                        if (tA !== 'SUPER_CONTATO' && tB === 'SUPER_CONTATO') return 1
+                                        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                                      })
+
+                                    if (adLeads.length === 0) return null
+
+                                    return (
+                                      <div style={{ marginTop: '12px', borderTop: '1px solid #222', paddingTop: '10px' }}>
+                                        <span style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>
+                                          👥 Interessados em Contato ({adLeads.length})
+                                        </span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                          {adLeads.map(lead => {
+                                            const isSuper = lead.tipo_lead === 'SUPER_CONTATO'
+                                            const showDetails = lead.liberado || isSuper
+                                            return (
+                                              <div key={lead.id} style={{ background: '#1c1c1c', border: isSuper ? '1px solid #ffd700' : '1px solid #333', padding: '10px', borderRadius: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#fff' }}>
+                                                    {lead.usuario?.nome_ou_razao || 'Interessado Anônimo'}
+                                                  </span>
+                                                  <span style={{
+                                                    fontSize: '0.58rem', fontWeight 700, padding: '1px 5px', borderRadius: '3px',
+                                                    background: isSuper ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255,255,255,0.08)',
+                                                    color: isSuper ? '#ffd700' : '#ccc',
+                                                    border: isSuper ? '1px solid #ffd700' : '1px solid #444'
+                                                  }}>
+                                                    {isSuper ? '⚡ SUPER' : '🤝 NORMAL'}
+                                                  </span>
+                                                </div>
+
+                                                {showDetails ? (
+                                                  <div style={{ fontSize: '0.72rem', color: '#ccc', lineHeight: '1.4' }}>
+                                                    <div>🏢 Empresa: {lead.usuario?.nome_ou_razao || 'N/A'}</div>
+                                                    <div>📞 WhatsApp: <strong>{lead.usuario?.whatsapp || 'N/A'}</strong></div>
+                                                    <div>📧 Email: {lead.usuario?.email || 'N/A'}</div>
+                                                  </div>
+                                                ) : (
+                                                  <div style={{ fontSize: '0.7rem', color: '#888', fontStyle: 'italic' }}>
+                                                    🔒 Contato oculto (Entrou na disputa da sala)
+                                                  </div>
+                                                )}
+
+                                                {/* Select Contact/Deu Negócio button */}
+                                                {item.status !== 'SUSPENSO' && item.status !== 'Finalizado' && (
+                                                  <button
+                                                    onClick={() => handleCloseDeal(item, lead)}
+                                                    className="btn btn-primary"
+                                                    style={{
+                                                      width: '100%', marginTop: '6px', padding: '4px 8px', fontSize: '0.68rem',
+                                                      fontWeight: 'bold', background: 'var(--primary-500)', color: '#000',
+                                                      border: 'none', borderRadius: '3px', cursor: 'pointer'
+                                                    }}
+                                                  >
+                                                    🤝 SELECIONAR CONTATO / DEU NEGÓCIO
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </div>
+                                    )
+                                  })()}
+
                                   {isLocked ? (
                                     <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--primary-500)', background: 'rgba(255,215,0,0.05)', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,215,0,0.15)' }}>
                                       <span>🔒 Lock de Segurança (Lote sob negociação)</span>
@@ -3970,11 +4410,11 @@ export default function Home() {
                         <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', borderBottom: '1px solid #222', paddingBottom: '10px', marginBottom: '16px', textAlign: 'left' }}>
                           💼 Ofertas em Negociação
                         </h4>
-                        {myListings.filter(a => a.tipo_anuncio === 'Oferta' && (a.status === 'Em Negociação' || a.status === 'Em_Negociacao' || a.status === 'Em negociação' || a.taxa_paga) && !isNegotiationExpired(a)).length === 0 ? (
+                        {interactedAds.filter(a => a.tipo_anuncio === 'Oferta' && a.status !== 'SUSPENSO').length === 0 ? (
                           <p style={{ color: '#666', fontSize: '0.8rem', fontStyle: 'italic', padding: '20px 0' }}>Nenhuma oferta em negociação.</p>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {myListings.filter(a => a.tipo_anuncio === 'Oferta' && (a.status === 'Em Negociação' || a.status === 'Em_Negociacao' || a.status === 'Em negociação' || a.taxa_paga) && !isNegotiationExpired(a)).map(item => (
+                            {interactedAds.filter(a => a.tipo_anuncio === 'Oferta' && a.status !== 'SUSPENSO').map(item => (
                               <NegotiationCard key={item.id} item={item} type="oferta" onPaySuperTaxa={handlePaySuperTaxa} />
                             ))}
                           </div>
@@ -3986,11 +4426,11 @@ export default function Home() {
                         <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold', borderBottom: '1px solid #222', paddingBottom: '10px', marginBottom: '16px', textAlign: 'left' }}>
                           🤝 Demandas em Negociação
                         </h4>
-                        {myListings.filter(a => a.tipo_anuncio === 'Demanda' && (a.status === 'Em Negociação' || a.status === 'Em_Negociacao' || a.status === 'Em negociação' || a.taxa_paga) && !isNegotiationExpired(a)).length === 0 ? (
+                        {interactedAds.filter(a => a.tipo_anuncio === 'Demanda' && a.status !== 'SUSPENSO').length === 0 ? (
                           <p style={{ color: '#666', fontSize: '0.8rem', fontStyle: 'italic', padding: '20px 0' }}>Nenhuma demanda em negociação.</p>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {myListings.filter(a => a.tipo_anuncio === 'Demanda' && (a.status === 'Em Negociação' || a.status === 'Em_Negociacao' || a.status === 'Em negociação' || a.taxa_paga) && !isNegotiationExpired(a)).map(item => (
+                            {interactedAds.filter(a => a.tipo_anuncio === 'Demanda' && a.status !== 'SUSPENSO').map(item => (
                               <NegotiationCard key={item.id} item={item} type="demanda" onPaySuperTaxa={handlePaySuperTaxa} />
                             ))}
                           </div>
@@ -4028,7 +4468,7 @@ export default function Home() {
                     </p>
 
                     {(() => {
-                      const finalizedAds = myListings.filter(a => isNegotiationExpired(a) || a.status === 'Finalizado' || a.status === 'Fechado' || a.status === 'Arrematado')
+                      const finalizedAds = myListings.filter(a => isNegotiationExpired(a) || a.status === 'Finalizado' || a.status === 'Fechado' || a.status === 'Arrematado' || a.status === 'SUSPENSO')
 
                       if (finalizedAds.length === 0 && releasedContacts.length === 0) {
                         return (
@@ -6010,6 +6450,118 @@ export default function Home() {
                         </div>
                       )}
 
+                      {/* ─── PIX PAYMENT MOCK MODAL ─── */}
+                      {pixPaymentModal && (
+                        <div
+                          style={{
+                            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+                            zIndex: 1002, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            backdropFilter: 'blur(8px)', padding: '20px'
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '100%', maxWidth: '440px', background: '#0d0d0d',
+                              border: '1px solid #333', borderRadius: '12px', overflow: 'hidden',
+                              boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+                            }}
+                          >
+                            {/* Header */}
+                            <div style={{ background: '#1c1c1c', padding: '16px 20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <h3 style={{ color: '#fff', margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                Pagamento Seguro via Pix
+                              </h3>
+                              <button
+                                onClick={() => setPixPaymentModal(null)}
+                                style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.3rem', cursor: 'pointer' }}
+                              >
+                                &times;
+                              </button>
+                            </div>
+
+                            {/* Body */}
+                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                              <div style={{ background: '#141414', border: '1px solid #222', padding: '12px 14px', borderRadius: '8px' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold' }}>
+                                  Anúncio de Referência
+                                </span>
+                                <strong style={{ color: '#fff', fontSize: '0.9rem', display: 'block', marginTop: '2px' }}>
+                                  {pixPaymentModal.item.residuo || pixPaymentModal.item.titulo_anuncio || pixPaymentModal.item.nome_material || 'Lote/Demanda'}
+                                </strong>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--primary-500)' }}>
+                                  Código: {pixPaymentModal.item.codigo}
+                                </span>
+                              </div>
+
+                              <div style={{ textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>
+                                  Modalidade Escolhida
+                                </span>
+                                <strong style={{ color: '#fff', fontSize: '1.05rem', display: 'block' }}>
+                                  {pixPaymentModal.type === 'SUPER_CONTATO' ? '⚡ SUPER CONTATO' : '🤝 TAXA NORMAL (Sala de Negociação)'}
+                                </strong>
+                                <span style={{ fontSize: '1.5rem', color: 'var(--primary-500)', fontWeight: 800, display: 'block', marginTop: '6px', fontFamily: 'monospace' }}>
+                                  R$ {pixPaymentModal.amount},00
+                                </span>
+                              </div>
+
+                              {/* Mock QR Code */}
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '8px', width: '180px', height: '180px', margin: '0 auto', justifyContent: 'center', border: '3px solid var(--primary-500)' }}>
+                                <svg width="140" height="140" viewBox="0 0 100 100" style={{ fill: '#000' }}>
+                                  <rect x="0" y="0" width="25" height="25" />
+                                  <rect x="5" y="5" width="15" height="15" fill="#fff" />
+                                  <rect x="8" y="8" width="9" height="9" />
+                                  
+                                  <rect x="75" y="0" width="25" height="25" />
+                                  <rect x="80" y="5" width="15" height="15" fill="#fff" />
+                                  <rect x="83" y="8" width="9" height="9" />
+                                  
+                                  <rect x="0" y="75" width="25" height="25" />
+                                  <rect x="5" y="80" width="15" height="15" fill="#fff" />
+                                  <rect x="8" y="83" width="9" height="9" />
+                                  
+                                  <rect x="35" y="10" width="10" height="15" />
+                                  <rect x="55" y="5" width="12" height="12" />
+                                  <rect x="40" y="35" width="20" height="20" />
+                                  <rect x="10" y="45" width="15" height="10" />
+                                  <rect x="70" y="40" width="20" height="15" />
+                                  <rect x="35" y="70" width="15" height="20" />
+                                  <rect x="65" y="70" width="20" height="20" />
+                                </svg>
+                              </div>
+
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#666', display: 'block', textAlign: 'center' }}>
+                                  Escaneie o QR Code acima ou use o Pix Copia e Cola
+                                </span>
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={`00020101021226870014br.gov.bcb.pix2565materraelo${pixPaymentModal.amount}00000`}
+                                  style={{ padding: '6px 10px', background: '#1c1c1c', border: '1px solid #333', borderRadius: '4px', fontSize: '0.72rem', color: '#888', textAlign: 'center', width: '100%', fontFamily: 'monospace' }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Footer Buttons */}
+                            <div style={{ background: '#141414', padding: '12px 20px', borderTop: '1px solid #222', display: 'flex', gap: '10px' }}>
+                              <button
+                                onClick={() => setPixPaymentModal(null)}
+                                style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, border: '1px solid #333', background: 'none', color: '#ccc', cursor: 'pointer', fontFamily: 'inherit' }}
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleConfirmPixPayment}
+                                style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, background: 'var(--primary-500)', color: '#000', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                              >
+                                Confirmar Pagamento
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* ─── FICHA MATERRA MODAL ─── */}
                       {fichaModal && (
                         <div
@@ -6378,7 +6930,7 @@ export default function Home() {
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <span>📍</span>
-                                  <span>{user ? `${distKm} km de você` : `${item.municipio_origem || item.municipio || 'N/A'}/${item.uf || 'GO'}`}</span>
+                                  <span>{user ? `${distKm} km de você` : 'Distância sob consulta (Faça login)'}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <span>🏷️</span>
@@ -6402,8 +6954,32 @@ export default function Home() {
                                 </div>
                               )}
 
-                              {/* NEGOTIATION STATE */}
-                              {isEmNegociacao && !isArrematado && (
+                              {/* SALA DE LEILÃO TIMER CONTROLS */}
+                              {item.habilitar_sala_leilao && !isArrematado && (
+                                <>
+                                  {!item.data_abertura_leilao ? (
+                                    <div style={{
+                                      padding: '9px 14px', background: 'rgba(255, 215, 0, 0.08)', borderTop: '1px solid rgba(255, 215, 0, 0.2)',
+                                      fontSize: '11px', color: '#ffd700', fontWeight: 600, textAlign: 'center'
+                                    }}>
+                                      ⏱️ A sala de negociação abrirá e ficará ativa por {item.duracao_leilao_horas || 48} horas após o primeiro participante entrar.
+                                    </div>
+                                  ) : (
+                                    <div style={{
+                                      padding: '9px 14px', background: 'rgba(192, 16, 16, 0.1)', borderTop: '1px solid #C01010',
+                                      fontSize: '12px', color: '#ef5350', fontWeight: 700,
+                                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                    }}>
+                                      <span>🔥 Sala de Negociação Ativa</span>
+                                      <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+                                        ⏱️ <LeilaoTimer endDate={item.data_fim_real} />
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+
+                              {!item.habilitar_sala_leilao && isEmNegociacao && !isArrematado && (
                                 <div style={{
                                   padding: '9px 14px', background: 'rgba(192, 16, 16, 0.1)', borderTop: '1px solid #C01010',
                                   fontSize: '12px', color: '#ef5350', fontWeight: 700,
@@ -6459,43 +7035,75 @@ export default function Home() {
                               )}
 
                               {/* ACTION BUTTONS */}
-                              <div style={{ padding: '8px 14px 12px', display: 'flex', gap: '8px', background: '#0d0d0d' }}>
-                                {isArrematado ? (
-                                  user && (
-                                    <button
-                                      onClick={() => handleListingClick(item)}
-                                      style={{
-                                        flex: 1, padding: '9px 12px', borderRadius: '6px', fontSize: '12px',
-                                        fontWeight: 700, border: '1px solid #333', background: '#1c1c1c',
-                                        color: '#ccc', cursor: 'pointer', fontFamily: 'inherit'
-                                      }}
-                                    >Ver minha Audit Trail</button>
-                                  )
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={() => {
-                                        if (!user) { setShowLoginGate(true); return; }
-                                        setExpandedCard(isExpanded ? null : item.id)
-                                      }}
-                                      style={{
-                                        flex: 1, padding: '9px 12px', borderRadius: '6px', fontSize: '12px',
-                                        fontWeight: 700, border: '1px solid #333', background: '#1c1c1c',
-                                        color: '#ccc', cursor: 'pointer', fontFamily: 'inherit'
-                                      }}
-                                    >{isExpanded ? 'Minimizar' : 'Ver detalhes'}</button>
-                                    <button
-                                      onClick={() => { if (!user) { setShowLoginGate(true); return; } handleListingClick(item) }}
-                                      style={{
-                                        flex: 1, padding: '9px 12px', borderRadius: '6px', fontSize: '12px',
-                                        fontWeight: 700,
-                                        background: isEmNegociacao ? '#000' : 'var(--primary-500)',
-                                        color: isEmNegociacao ? 'var(--primary-500)' : '#000',
-                                        border: isEmNegociacao ? '1px solid var(--primary-500)' : 'none',
-                                        cursor: 'pointer', fontFamily: 'inherit'
-                                      }}
-                                    >{isEmNegociacao ? 'Entrar na sala' : 'Negociar'}</button>
-                                  </>
+                              <div style={{ padding: '8px 14px 12px', display: 'flex', flexDirection: 'column', gap: '8px', background: '#0d0d0d' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    onClick={() => {
+                                      if (!user) { setShowLoginGate(true); return; }
+                                      setExpandedCard(isExpanded ? null : item.id)
+                                    }}
+                                    style={{
+                                      flex: 1, padding: '9px 12px', borderRadius: '6px', fontSize: '12px',
+                                      fontWeight: 700, border: '1px solid #333', background: '#1c1c1c',
+                                      color: '#ccc', cursor: 'pointer', fontFamily: 'inherit'
+                                    }}
+                                  >{isExpanded ? 'Minimizar' : 'Ver detalhes'}</button>
+                                  
+                                  {isArrematado ? (
+                                    user && (
+                                      <button
+                                        onClick={() => handleListingClick(item)}
+                                        style={{
+                                          flex: 1, padding: '9px 12px', borderRadius: '6px', fontSize: '12px',
+                                          fontWeight: 700, border: '1px solid #333', background: '#1c1c1c',
+                                          color: '#ccc', cursor: 'pointer', fontFamily: 'inherit'
+                                        }}
+                                      >Ver minha Audit Trail</button>
+                                    )
+                                  ) : null}
+                                </div>
+
+                                {!isArrematado && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                                    {item.habilitar_sala_leilao ? (
+                                      <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                          onClick={() => {
+                                            if (!user) { setShowLoginGate(true); return; }
+                                            triggerPixPayment(item, 'NORMAL', 50)
+                                          }}
+                                          style={{
+                                            flex: 1, padding: '9px 10px', borderRadius: '6px', fontSize: '11px',
+                                            fontWeight: 700, background: '#1a1a1a', color: 'var(--primary-500)',
+                                            border: '1px solid var(--primary-500)', cursor: 'pointer', fontFamily: 'inherit'
+                                          }}
+                                        >NEGOCIAR - Taxa Normal</button>
+                                        <button
+                                          onClick={() => {
+                                            if (!user) { setShowLoginGate(true); return; }
+                                            triggerPixPayment(item, 'SUPER_CONTATO', 80)
+                                          }}
+                                          style={{
+                                            flex: 1, padding: '9px 10px', borderRadius: '6px', fontSize: '11px',
+                                            fontWeight: 700, background: 'linear-gradient(90deg, #ffd700, #ffb300)', color: '#000',
+                                            border: 'none', cursor: 'pointer', fontFamily: 'inherit'
+                                          }}
+                                        >PULAR NEGOCIAÇÃO - R$ 80</button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          if (!user) { setShowLoginGate(true); return; }
+                                          triggerPixPayment(item, 'SUPER_CONTATO', 45)
+                                        }}
+                                        style={{
+                                          width: '100%', padding: '10px 12px', borderRadius: '6px', fontSize: '12px',
+                                          fontWeight: 700, background: 'linear-gradient(90deg, #ffd700, #ffb300)', color: '#000',
+                                          border: 'none', cursor: 'pointer', fontFamily: 'inherit'
+                                        }}
+                                      >Negociar - R$ 45,00</button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
 
@@ -6574,6 +7182,21 @@ export default function Home() {
                                   </div>
                                   <div style={{ padding: '4px 14px 10px', fontSize: '12px', color: '#aaa', lineHeight: '1.6', background: '#121212', fontStyle: 'italic' }}>
                                     "{item.descricao_material || item.descricao || 'Material gerado em processo industrial. Entre em contato para mais informações sobre acondicionamento, umidade e disponibilidade.'}"
+                                  </div>
+
+                                  {/* Especificações Técnicas (Passo 2 e 3) */}
+                                  <div style={{ padding: '8px 14px 4px', fontSize: '11px', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.6px', background: '#121212', borderTop: '1px solid #222' }}>
+                                    Especificações Técnicas (Materra Elo)
+                                  </div>
+                                  <div style={{ padding: '8px 14px 10px', fontSize: '12px', color: '#ccc', background: '#121212', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                                    <div><b>Grupo:</b> {item.grupo || 'N/A'}</div>
+                                    <div><b>Categoria/Subcategoria:</b> {item.categoria_subcategoria || item.categoria || 'N/A'}</div>
+                                    <div><b>Código IBAMA:</b> {item.codigo_ibama || 'N/A'}</div>
+                                    <div><b>Classe:</b> {item.classe || item.classe_residuo || 'N/A'}</div>
+                                    <div><b>Volume Total:</b> {item.volume_total || item.quantidade} {item.unidade || 't'}</div>
+                                    <div><b>Acondicionamento:</b> {item.acondicionamento || 'N/A'}</div>
+                                    <div><b>Infraestrutura Mínima:</b> {Array.isArray(item.infraestrutura_minima) ? item.infraestrutura_minima.join(', ') : item.infraestrutura_minima || 'N/A'}</div>
+                                    <div><b>Características:</b> {item.caracteristicas || 'N/A'}</div>
                                   </div>
 
                                   {/* Requisitos */}

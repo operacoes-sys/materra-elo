@@ -12,15 +12,22 @@ import {
 } from 'lucide-react'
 
 // Real-time ticking Countdown Timer component for auctions
-const LeilaoTimer = ({ dias }: { dias: number }) => {
+const LeilaoTimer = ({ dias, endDate }: { dias?: number; endDate?: string }) => {
   const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
-    // Calculate target date when mounted (today at midnight + X days)
-    const targetDate = new Date()
-    targetDate.setHours(0, 0, 0, 0)
-    targetDate.setDate(targetDate.getDate() + dias)
-    const targetMs = targetDate.getTime()
+    let targetMs = 0
+    if (endDate) {
+      targetMs = new Date(endDate).getTime()
+    } else if (dias !== undefined) {
+      const targetDate = new Date()
+      targetDate.setHours(0, 0, 0, 0)
+      targetDate.setDate(targetDate.getDate() + dias)
+      targetMs = targetDate.getTime()
+    } else {
+      setTimeLeft('Sem data')
+      return
+    }
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -35,19 +42,55 @@ const LeilaoTimer = ({ dias }: { dias: number }) => {
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const s = Math.floor((diff % (1000 * 60)) / 1000)
 
-      setTimeLeft(`Restam ${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
+      if (d > 0) {
+        setTimeLeft(`Restam ${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
+      } else {
+        setTimeLeft(`Restam ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`)
+      }
     }
 
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
-  }, [dias])
+  }, [dias, endDate])
 
   return (
     <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontFamily: 'monospace' }}>
       {timeLeft}
     </span>
   )
+}
+
+const getDistanceBetweenCeps = (cepA: string, cepB: string): number => {
+  if (!cepA || !cepB) return 50
+  const cleanA = cepA.replace(/\D/g, '')
+  const cleanB = cepB.replace(/\D/g, '')
+  if (cleanA.length < 5 || cleanB.length < 5) return 50
+
+  const prefixA = cleanA.substring(0, 5)
+  const prefixB = cleanB.substring(0, 5)
+  if (prefixA === prefixB) {
+    return Math.abs(parseInt(cleanA.slice(-3)) - parseInt(cleanB.slice(-3))) % 10 + 2
+  }
+
+  const regionA3 = parseInt(cleanA.substring(0, 3))
+  const regionB3 = parseInt(cleanB.substring(0, 3))
+  const diff3 = Math.abs(regionA3 - regionB3)
+  if (diff3 === 0) {
+    return 15 + (Math.abs(parseInt(cleanA.substring(3, 5)) - parseInt(cleanB.substring(3, 5))) * 5)
+  }
+
+  const regionA2 = parseInt(cleanA.substring(0, 2))
+  const regionB2 = parseInt(cleanB.substring(0, 2))
+  const diff2 = Math.abs(regionA2 - regionB2)
+  if (diff2 === 0) {
+    return 40 + (diff3 * 8)
+  }
+
+  const regionA1 = parseInt(cleanA.substring(0, 1))
+  const regionB1 = parseInt(cleanB.substring(0, 1))
+  const diff1 = Math.abs(regionA1 - regionB1)
+  return 100 + (diff1 * 120) + (diff2 * 12)
 }
 
 // Logo Globe Component
@@ -69,6 +112,8 @@ export default function VitrineAnunciosPage() {
 
   // Auth/profile context
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
+  const [pixPaymentModal, setPixPaymentModal] = useState<{ item: any; type: 'NORMAL' | 'SUPER_CONTATO'; amount: number } | null>(null)
 
   // Listings data
   const [listings, setListings] = useState<any[]>([])
@@ -136,6 +181,7 @@ export default function VitrineAnunciosPage() {
       }
 
       if (loggedUser) {
+        setUser(loggedUser)
         const { data } = await supabase
           .from('cadastros')
           .select('id, uf, tipo_parte, nome_ou_razao, nivel_selo, score_0a100')
@@ -585,7 +631,122 @@ export default function VitrineAnunciosPage() {
     setShowLeadFeeModal(false)
     router.push(`/sala?id=${roomUuid}`)
   }
+  const triggerPixPayment = (item: any, type: 'NORMAL' | 'SUPER_CONTATO', amount: number) => {
+    if (!user) {
+      alert('Faça login para prosseguir com o pagamento.')
+      return
+    }
+    setPixPaymentModal({ item, type, amount })
+  }
 
+  const handleConfirmPixPayment = async () => {
+    if (!pixPaymentModal || !user) return
+    const { item, type, amount } = pixPaymentModal
+
+    try {
+      // 1. Update/insert contatos table
+      const leadId = crypto.randomUUID()
+      const { error: errCp } = await supabase
+        .from('contatos')
+        .insert([{
+          id: leadId,
+          id_usuario: user.id,
+          id_contraparte: item.id_cadastro || '11111111-1111-1111-1111-111111111111',
+          id_anuncio: item.id,
+          liberado: type === 'SUPER_CONTATO',
+          taxa_lead_paga: true,
+          taxa_lead_valor: amount,
+          tipo_lead: type,
+          valor_pago: amount
+        }])
+
+      if (errCp) throw errCp
+
+      // 2. Calculate dates for room timer if active
+      let updateFields: any = { status: 'Em negociação', taxa_paga: true }
+      if (item.habilitar_sala_leilao) {
+        if (!item.data_abertura_leilao) {
+          const nowStr = new Date().toISOString()
+          const durationHrs = item.duracao_leilao_horas || 48
+          const endStr = new Date(Date.now() + durationHrs * 60 * 60 * 1000).toISOString()
+          updateFields.data_abertura_leilao = nowStr
+          updateFields.data_fim_real = endStr
+        }
+      }
+
+      // Update in Supabase anuncios table
+      const { error: errAd } = await supabase
+        .from('anuncios')
+        .update(updateFields)
+        .eq('id', item.id)
+
+      if (errAd) throw errAd
+
+      // 3. Create negotiation room in localStorage
+      try {
+        const activeRoomsStr = localStorage.getItem('materra_active_negotiations') || '[]'
+        const activeRooms = JSON.parse(activeRoomsStr)
+        const roomUuid = crypto.randomUUID()
+        const proponenteName = userProfile?.nome_ou_razao || user.email || 'Interessado'
+        const existingIndex = activeRooms.findIndex((r: any) => r.id_anuncio === item.id && r.id_proponente === user.id)
+        if (existingIndex === -1) {
+          activeRooms.push({
+            id: roomUuid,
+            id_anuncio: item.id,
+            id_proponente: user.id,
+            proponente_nome: proponenteName,
+            proponente_selo: userProfile?.nivel_selo || 'Bronze',
+            proponente_score: userProfile?.score_0a100 || 45,
+            created_at: new Date().toISOString(),
+            status: 'Ativa',
+            taxa_lead_paga: true,
+            taxa_lead_valor: amount,
+            mensagens: [
+              {
+                id: 'msg_1',
+                remetente_id: user.id,
+                remetente_nome: proponenteName,
+                texto: type === 'SUPER_CONTATO' 
+                  ? `Iniciando contato prioritário via Super Contato!` 
+                  : `Tenho interesse e entrei na sala de negociação.`,
+                tipo: 'PROPOSTA_INICIAL',
+                quantidade: item.quantidade || 0,
+                preco: item.valor_desejado || 0,
+                timestamp: new Date().toISOString()
+              }
+            ]
+          })
+          localStorage.setItem('materra_active_negotiations', JSON.stringify(activeRooms))
+        }
+      } catch (e) {
+        console.warn('Could not update active negotiations locally:', e)
+      }
+
+      // 4. Save to Audit Trail
+      try {
+        const auditTrailStr = localStorage.getItem('materra_compliance_audit_trail') || '[]'
+        const auditTrail = JSON.parse(auditTrailStr)
+        auditTrail.unshift({
+          event_type: 'LEAD_FEE_PAID',
+          event_category: 'Financeiro',
+          event_description: `Pagamento de Pix de R$ ${amount},00 simulado com sucesso para lead do anúncio [${item.codigo || item.id.substring(0, 6)}]. Tipo: ${type}`,
+          actor_id: user.id,
+          actor_name: userProfile?.nome_ou_razao || user.email,
+          timestamp: new Date().toISOString()
+        })
+        localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+      } catch (e) {
+        console.warn('Could not save to audit trail:', e)
+      }
+
+      alert(`Pagamento de R$ ${amount},00 processado com sucesso! Redirecionando para seus negócios...`)
+      setPixPaymentModal(null)
+      router.push('/?view=negocios')
+
+    } catch (e: any) {
+      alert('Erro ao processar simulação de Pix: ' + e.message)
+    }
+  }
   const handleInterest = async (listing: any) => {
     openLeadFeeModal(listing)
   }
@@ -1006,7 +1167,11 @@ export default function VitrineAnunciosPage() {
                           </span>
                           <span>•</span>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            <MapPin size={12} /> {item.municipio}, {item.uf} (CEP 🔒)
+                            <MapPin size={12} /> {(() => {
+                              if (!userProfile) return 'Distância sob consulta (Faça login)'
+                              const dist = getDistanceBetweenCeps(userProfile.cep || '74000-000', item.cep || '75000-000')
+                              return `A ~${dist} km de você`
+                            })()}
                           </span>
                         </div>
                       </div>
@@ -1073,10 +1238,18 @@ export default function VitrineAnunciosPage() {
                       <div>
                         <span style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', display: 'block', fontWeight: 'bold' }}>⏱️ Leilão & Duração</span>
                         <span style={{ fontSize: '0.85rem', color: '#ccc', fontWeight: 'bold', display: 'block', marginTop: '2px' }}>
-                          Timer: <LeilaoTimer dias={days} />
+                          {item.habilitar_sala_leilao ? (
+                            !item.data_abertura_leilao ? (
+                              <span style={{ color: '#ffd700' }}>Aguardando 1º lance</span>
+                            ) : (
+                              <LeilaoTimer endDate={item.data_fim_real} />
+                            )
+                          ) : (
+                            <span style={{ color: '#888' }}>Sem leilão (Super Contato)</span>
+                          )}
                         </span>
                         <span style={{ fontSize: '0.75rem', color: '#888', display: 'block', marginTop: '2px' }}>
-                          Frete: {item.observacoes?.includes('Anunciante') ? 'Anunciante paga' : 'Contraparte paga'}
+                          Frete: {item.responsavel_frete ? 'Anunciante paga' : 'Contraparte paga'}
                         </span>
                       </div>
                     </div>
@@ -1127,25 +1300,37 @@ export default function VitrineAnunciosPage() {
                         )}
                       </button>
 
-                      <button
-                        onClick={() => handleInterest(item)}
-                        style={{
-                          background: 'var(--primary)',
-                          border: 'none',
-                          color: '#000',
-                          padding: '10px 24px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                          fontWeight: 'bold',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          boxShadow: '0 4px 10px rgba(255, 215, 0, 0.15)'
-                        }}
-                      >
-                        Participar 🚀
-                      </button>
+                      {item.habilitar_sala_leilao ? (
+                        <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                          <button
+                            onClick={() => triggerPixPayment(item, 'NORMAL', 50)}
+                            style={{
+                              flex: 1, padding: '10px 10px', borderRadius: '6px', fontSize: '0.78rem',
+                              fontWeight: 700, background: 'none', color: 'var(--primary)',
+                              border: '1px solid var(--primary)', cursor: 'pointer', fontFamily: 'inherit'
+                            }}
+                          >NEGOCIAR - Taxa Normal</button>
+                          <button
+                            onClick={() => triggerPixPayment(item, 'SUPER_CONTATO', 80)}
+                            style={{
+                              flex: 1, padding: '10px 10px', borderRadius: '6px', fontSize: '0.78rem',
+                              fontWeight: 700, background: 'var(--primary)', color: '#000',
+                              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                              boxShadow: '0 4px 10px rgba(255, 215, 0, 0.15)'
+                            }}
+                          >PULAR NEGOCIAÇÃO - R$ 80</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => triggerPixPayment(item, 'SUPER_CONTATO', 45)}
+                          style={{
+                            flex: 1, padding: '10px 24px', borderRadius: '6px', fontSize: '0.85rem',
+                            fontWeight: 700, background: 'var(--primary)', color: '#000',
+                            border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                            boxShadow: '0 4px 10px rgba(255, 215, 0, 0.15)'
+                          }}
+                        >Negociar - R$ 45,00</button>
+                      )}
 
                       {/* Favorite Button */}
                       <button
@@ -1188,6 +1373,23 @@ export default function VitrineAnunciosPage() {
                           <p style={{ margin: 0, fontSize: '0.9rem', color: '#ccc', lineHeight: 1.5, background: '#0a0a0a', padding: '14px', borderRadius: '6px', border: '1px solid #222' }}>
                             {item.origem_processo || 'Nenhuma descrição fornecida pelo anunciante.'}
                           </p>
+                        </div>
+
+                        {/* Especificações Técnicas (Passo 2 e 3) */}
+                        <div>
+                          <strong style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'var(--font-heading)' }}>
+                            🔬 Especificações Técnicas (Materra Elo)
+                          </strong>
+                          <div style={{ padding: '14px', fontSize: '0.9rem', color: '#ccc', background: '#0a0a0a', borderRadius: '6px', border: '1px solid #222', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                            <div><b>Grupo:</b> {item.grupo || 'N/A'}</div>
+                            <div><b>Categoria/Subcategoria:</b> {item.categoria_subcategoria || item.categoria || 'N/A'}</div>
+                            <div><b>Código IBAMA:</b> {item.codigo_ibama || 'N/A'}</div>
+                            <div><b>Classe:</b> {item.classe || item.classe_residuo || 'N/A'}</div>
+                            <div><b>Volume Total:</b> {item.volume_total || item.quantidade} {item.unidade || 't'}</div>
+                            <div><b>Acondicionamento:</b> {item.acondicionamento || 'N/A'}</div>
+                            <div><b>Infraestrutura Mínima:</b> {Array.isArray(item.infraestrutura_minima) ? item.infraestrutura_minima.join(', ') : item.infraestrutura_minima || 'N/A'}</div>
+                            <div><b>Características:</b> {item.caracteristicas || 'N/A'}</div>
+                          </div>
                         </div>
 
                         {/* Physical attributes / Characteristics */}
@@ -1295,6 +1497,120 @@ export default function VitrineAnunciosPage() {
           )}
         </section>
       </div>
+
+      {/* ─── PIX PAYMENT MOCK MODAL ─── */}
+      {pixPaymentModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+            zIndex: 1002, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(8px)', padding: '20px'
+          }}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: '440px', background: '#0d0d0d',
+              border: '1px solid #333', borderRadius: '12px', overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ background: '#1c1c1c', padding: '16px 20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ color: '#fff', margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                Pagamento Seguro via Pix
+              </h3>
+              <button
+                onClick={() => setPixPaymentModal(null)}
+                style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: '#141414', border: '1px solid #222', padding: '12px 14px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold' }}>
+                  Anúncio de Referência
+                </span>
+                <strong style={{ color: '#fff', fontSize: '0.9rem', display: 'block', marginTop: '2px' }}>
+                  {pixPaymentModal.item.residuo || pixPaymentModal.item.titulo_anuncio || pixPaymentModal.item.nome_material || 'Lote/Demanda'}
+                </strong>
+                <span style={{ fontSize: '0.72rem', color: 'var(--primary)' }}>
+                  Código: {pixPaymentModal.item.codigo}
+                </span>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>
+                  Modalidade Escolhida
+                </span>
+                <strong style={{ color: '#fff', fontSize: '1.05rem', display: 'block' }}>
+                  {pixPaymentModal.type === 'SUPER_CONTATO' 
+                    ? (pixPaymentModal.amount === 80 ? '⚡ PULAR NEGOCIAÇÃO' : '🤝 NEGOCIAR (Sem sala / Doação)') 
+                    : '🤝 TAXA NORMAL (Sala de Negociação)'}
+                </strong>
+                <span style={{ fontSize: '1.5rem', color: 'var(--primary)', fontWeight: 800, display: 'block', marginTop: '6px', fontFamily: 'monospace' }}>
+                  R$ {pixPaymentModal.amount},00
+                </span>
+              </div>
+
+              {/* Mock QR Code */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '8px', width: '180px', height: '180px', margin: '0 auto', justifyContent: 'center', border: '3px solid var(--primary)' }}>
+                <svg width="140" height="140" viewBox="0 0 100 100" style={{ fill: '#000' }}>
+                  <rect x="0" y="0" width="25" height="25" />
+                  <rect x="5" y="5" width="15" height="15" fill="#fff" />
+                  <rect x="8" y="8" width="9" height="9" />
+                  
+                  <rect x="75" y="0" width="25" height="25" />
+                  <rect x="80" y="5" width="15" height="15" fill="#fff" />
+                  <rect x="83" y="8" width="9" height="9" />
+                  
+                  <rect x="0" y="75" width="25" height="25" />
+                  <rect x="5" y="80" width="15" height="15" fill="#fff" />
+                  <rect x="8" y="83" width="9" height="9" />
+                  
+                  <rect x="35" y="10" width="10" height="15" />
+                  <rect x="55" y="5" width="12" height="12" />
+                  <rect x="40" y="35" width="20" height="20" />
+                  <rect x="10" y="45" width="15" height="10" />
+                  <rect x="70" y="40" width="20" height="15" />
+                  <rect x="35" y="70" width="15" height="20" />
+                  <rect x="65" y="70" width="20" height="20" />
+                </svg>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '0.68rem', color: '#666', display: 'block', textAlign: 'center' }}>
+                  Escaneie o QR Code acima ou use o Pix Copia e Cola
+                </span>
+                <input
+                  type="text"
+                  readOnly
+                  value={`00020101021226870014br.gov.bcb.pix2565materraelo${pixPaymentModal.amount}00000`}
+                  style={{ padding: '6px 10px', background: '#1c1c1c', border: '1px solid #333', borderRadius: '4px', fontSize: '0.72rem', color: '#888', textAlign: 'center', width: '100%', fontFamily: 'monospace' }}
+                />
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{ background: '#141414', padding: '12px 20px', borderTop: '1px solid #222', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setPixPaymentModal(null)}
+                style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, border: '1px solid #333', background: 'none', color: '#ccc', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmPixPayment}
+                style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, background: 'var(--primary)', color: '#000', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Confirmar Pagamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODALS SECTION */}
       {showSpecialtyWarning && (
