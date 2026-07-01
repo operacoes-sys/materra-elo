@@ -4429,7 +4429,7 @@ export default function Home() {
                                                     {lead.usuario?.nome_ou_razao || 'Interessado Anônimo'}
                                                   </span>
                                                   <span style={{
-                                                    fontSize: '0.58rem', fontWeight 700, padding: '1px 5px', borderRadius: '3px',
+                                                    fontSize: '0.58rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '3px',
                                                     background: isSuper ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255,255,255,0.08)',
                                                     color: isSuper ? '#ffd700' : '#ccc',
                                                     border: isSuper ? '1px solid #ffd700' : '1px solid #444'
