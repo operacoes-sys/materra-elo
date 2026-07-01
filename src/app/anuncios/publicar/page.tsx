@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ESTADOS_BRASIL, TRATAMENTOS_PREVISTOS } from '@/lib/constants'
+import { AUTOCOMPLETE_DICTIONARY } from '@/lib/autocomplete_data'
 import Link from 'next/link'
 import {
   ArrowLeft, Check, X, Shield, Info, Calendar, MapPin,
@@ -187,13 +188,20 @@ export default function PublicarAnuncioPage() {
   const [idFichaEmpresa, setIdFichaEmpresa] = useState<string | null>(null)
   const [razaoSocialEmpresa, setRazaoSocialEmpresa] = useState<string | null>(null)
 
+  const [tipoPredefinido, setTipoPredefinido] = useState(false)
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const idFicha = params.get('id_ficha_empresa')
       const name = params.get('razao_social')
+      const tipoParam = params.get('tipo')
       if (idFicha) setIdFichaEmpresa(idFicha)
       if (name) setRazaoSocialEmpresa(name)
+      if (tipoParam === 'Oferta' || tipoParam === 'Demanda') {
+        setTipoAnuncio(tipoParam)
+        setTipoPredefinido(true)
+      }
     }
   }, [])
 
@@ -233,6 +241,26 @@ export default function PublicarAnuncioPage() {
   // ==========================================
   // FORM STATES (11 step structure)
   // ==========================================
+
+  // Autocomplete and matrix compliance states
+  const [buscaAmigavel, setBuscaAmigavel] = useState('')
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [showManualFallback, setShowManualFallback] = useState(false)
+  const [grupo, setGrupo] = useState<number | null>(null)
+  const [categoriaSubcategoria, setCategoriaSubcategoria] = useState('')
+  const [nomeMaterial, setNomeMaterial] = useState('')
+  const [distanciaKm, setDistanciaKm] = useState<number>(0)
+  const [tipoFluxo, setTipoFluxo] = useState<string>('VENDA')
+  const [regimeFornecimento, setRegimeFornecimento] = useState<string>('LOTE_UNICO')
+  const [aceitaFracionar, setAceitaFracionar] = useState(false)
+  const [aceitaMenorValor, setAceitaMenorValor] = useState(false)
+  const [precoUnidade, setPrecoUnidade] = useState<number>(0)
+  const [situacaoAnuncio, setSituacaoAnuncio] = useState<string>('NORMAL')
+
+  // Manual free-text metadata fields
+  const [origemProcessoGerador, setOrigemProcessoGerador] = useState('')
+  const [especificacoesTecnicasExigencias, setEspecificacoesTecnicasExigencias] = useState('')
+  const [requisitosAdicionaisObservacoes, setRequisitosAdicionaisObservacoes] = useState('')
 
   // Step 0: Nome do Anúncio
   const [tituloAnuncio, setTituloAnuncio] = useState('')
@@ -401,6 +429,15 @@ export default function PublicarAnuncioPage() {
     }
   }, [classe])
 
+  // Step 4: Lock transport requirement based on compliance group
+  useEffect(() => {
+    if (grupo === 4) {
+      setTransporteObrigatorio('Classe I')
+    } else if (grupo !== null) {
+      setTransporteObrigatorio('Classe II')
+    }
+  }, [grupo])
+
   // Fetch real-time Index price from API when step is 6 or when residue/UF changes
   useEffect(() => {
     if (step === 6 && residuo && uf) {
@@ -563,8 +600,8 @@ export default function PublicarAnuncioPage() {
         throw new Error('Você atingiu o limite gratuito de 1 publicação. Por favor, ative um plano pago (Starter, Growth ou Business) para continuar publicando.')
       }
 
-      if (classe === 'Classe I – perigoso' && !fispqFile) {
-        throw new Error('A FISPQ é obrigatória para resíduos Classe I (Perigoso).')
+      if (grupo === 4 && !fispqFile) {
+        throw new Error('A FISPQ é obrigatória para resíduos do Grupo 4 (Perigoso).')
       }
 
       if (!declaracaoAceite) {
@@ -609,6 +646,25 @@ export default function PublicarAnuncioPage() {
         mappingTipoLeilao = opcaoDoacaoInteressados === 'Leilão ASCENDENTE' ? 'Ascendente' : 'Descendente'
       }
 
+      // Map exact 15 keys
+      const mappedGrupo = grupo !== null ? grupo : (classe === 'Classe I – perigoso' ? 4 : 3)
+      const regimeFornecVal = tipoColeta === 'COLETA RECORRENTE' ? 'CONTRATO' : 'LOTE_UNICO'
+      
+      let mappedFluxo = 'VENDA'
+      if (tipoAnuncio === 'Oferta') {
+        if (formaNegociacao === 'DOAÇÃO') mappedFluxo = 'DOACAO'
+        else if (formaNegociacao === 'EU RECEBO') mappedFluxo = 'VENDA'
+        else mappedFluxo = 'PASSIVO'
+      } else {
+        if (formaNegociacao === 'DOAÇÃO') mappedFluxo = 'DOACAO'
+        else if (formaNegociacao === 'EU PAGO') mappedFluxo = 'COMPRA'
+        else mappedFluxo = 'PASSIVO'
+      }
+
+      const mappedSelo = seloMinimo === 'Sem exigência' ? 'LIVRE' : seloMinimo.toUpperCase()
+      const mappedFrete = quemArcaFrete === 'EU'
+      const mappedSituacao = coletaEmergencial ? 'EMERGENCIA' : (mappedSelo !== 'LIVRE' ? 'DESTAQUE' : 'NORMAL')
+
       // Build payload for anuncios
       let payload = {
         id_cadastro: user.id,
@@ -631,7 +687,7 @@ export default function PublicarAnuncioPage() {
         cep,
         uf,
         municipio,
-        origem_processo: origemProcesso,
+        origem_processo: origemProcessoGerador || origemProcesso,
         caracteristicas: caracteristicas.join(', ') + (caracteristicasOutros ? `: ${caracteristicasOutros}` : ''),
         foto_url: fotoUrl || null,
         video_url: videoUrl || null,
@@ -640,14 +696,33 @@ export default function PublicarAnuncioPage() {
         percentual_desvio: devText,
         tipo_leilao: mappingTipoLeilao,
         tratamento_destinacao: TRATAMENTOS_PREVISTOS[0],
-        tem_licenca: !!fispqFile || !!laudoFile,
+        tem_licenca: !!laudoFile,
         licenca_anexo_url: licencaAnexoUrl || null,
         disponibilidade_imediata: quandoComeca === 'Imediatamente',
         urgencia_prazo: coletaEmergencial ? 'Urgente' : 'Normal',
         identidade_oculta: true,
         status: 'Anunciado',
         quem_arca_frete: quemArcaFrete,
-        observacoes: requisitosEscrito || `Frequência compatível exigida: ${frequenciaCompativelExigida ? 'Sim' : 'Não'}`
+        observacoes: requisitosAdicionaisObservacoes || requisitosEscrito || `Frequência compatível exigida: ${frequenciaCompativelExigida ? 'Sim' : 'Não'}`,
+        
+        // 15 exact keys for vitrine search index
+        grupo: mappedGrupo,
+        categoria_subcategoria: categoriaSubcategoria || categoria,
+        nome_material: tituloAnuncio || actualResiduo,
+        distancia_km: distanciaKm || 0,
+        tipo_fluxo: mappedFluxo,
+        regime_fornecimento: regimeFornecVal,
+        volume_total: parseFloat(quantidade) || 0,
+        aceita_menor_valor: aceitaMenorValor,
+        preco_unidade: desired,
+        situacao_anuncio: mappedSituacao,
+        selo_minimo: mappedSelo,
+        tem_avaliacao: !!laudoFile,
+        responsavel_frete: mappedFrete,
+        infraestrutura_minima: condicoesAcesso,
+        origem_processo_gerador: origemProcessoGerador || origemProcesso,
+        especificacoes_tecnicas_exigencias: especificacoesTecnicasExigencias,
+        requisitos_adicionais_observacoes: requisitosAdicionaisObservacoes || requisitosEscrito
       }
 
       // Save announcement in localStorage so it appears in the Vitrine mock/wireframe list
@@ -724,8 +799,12 @@ export default function PublicarAnuncioPage() {
     if (step === 0) {
       nextDisabled = !tituloAnuncio || tituloAnuncio.length < 10 || tituloAnuncio.length > 100
     }
+    if (step === 2) {
+      nextDisabled = !selectedItem && !showManualFallback
+    }
     if (step === 3) {
-      nextDisabled = !quantidade || !residuo || !origemProcesso || origemProcesso.length < 20
+      const textVal = tipoAnuncio === 'Oferta' ? origemProcessoGerador : especificacoesTecnicasExigencias
+      nextDisabled = !quantidade || parseFloat(quantidade) <= 0 || !residuo || !textVal || textVal.length < 20
     }
     if (step === 4) {
       nextDisabled = quandoComeca === 'Data específica' && !dataInicio
@@ -742,7 +821,7 @@ export default function PublicarAnuncioPage() {
         {step > 0 && (
           <button
             type="button"
-            onClick={() => setStep(prev => prev - 1)}
+            onClick={() => setStep(prev => (tipoPredefinido && prev === 2) ? 0 : prev - 1)}
             style={{
               padding: '12px 24px',
               background: 'transparent',
@@ -786,7 +865,7 @@ export default function PublicarAnuncioPage() {
             <button
               type="button"
               disabled={nextDisabled}
-              onClick={() => setStep(prev => prev + 1)}
+              onClick={() => setStep(prev => (tipoPredefinido && prev === 0) ? 2 : prev + 1)}
               style={{
                 padding: '12px 28px',
                 background: nextDisabled ? 'rgba(255,255,255,0.05)' : 'var(--primary)',
@@ -808,15 +887,15 @@ export default function PublicarAnuncioPage() {
           ) : (
             <button
               type="submit"
-              disabled={submitting || !declaracaoAceite || (classe === 'Classe I – perigoso' && !fispqFile)}
+              disabled={submitting || !declaracaoAceite || (grupo === 4 && !fispqFile)}
               style={{
                 padding: '12px 32px',
-                background: (submitting || !declaracaoAceite || (classe === 'Classe I – perigoso' && !fispqFile)) ? 'rgba(255,255,255,0.05)' : '#00FF66',
+                background: (submitting || !declaracaoAceite || (grupo === 4 && !fispqFile)) ? 'rgba(255,255,255,0.05)' : '#00FF66',
                 border: 'none',
                 color: '#000',
                 borderRadius: '6px',
                 fontWeight: 'bold',
-                cursor: (submitting || !declaracaoAceite || (classe === 'Classe I – perigoso' && !fispqFile)) ? 'not-allowed' : 'pointer',
+                cursor: (submitting || !declaracaoAceite || (grupo === 4 && !fispqFile)) ? 'not-allowed' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -925,39 +1004,47 @@ export default function PublicarAnuncioPage() {
           <div style={{ marginBottom: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                PASSO {step} DE 10
+                {tipoPredefinido 
+                  ? `PASSO ${step === 0 ? 0 : step - 1} DE 9`
+                  : `PASSO ${step} DE 10`
+                }
               </span>
               <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', fontFamily: 'var(--font-heading)' }}>
                 {step === 0 && 'Nome do Anúncio'}
                 {step === 1 && 'Tipo de Anúncio'}
-                {step === 2 && 'Categoria do Resíduo'}
+                {step === 2 && 'Dados do Produto & Matriz Elo'}
                 {step === 3 && 'Detalhamento do Resíduo'}
                 {step === 4 && 'Disponibilidade e Coleta'}
                 {step === 5 && 'Localização & Logística'}
                 {step === 6 && 'Forma de Negociação'}
-                {step === 7 && 'Duração & Urgência'}
-                {step === 8 && 'Requisitos da Contraparte'}
+                {step === 7 && 'Requisitos & Projeção MTR/CDF'}
+                {step === 8 && 'Duração & Urgência'}
                 {step === 9 && 'Mídias e Anexos'}
                 {step === 10 && 'Confirmação e Preview'}
               </span>
             </div>
             {/* Horizontal progress indicators */}
             <div style={{ display: 'flex', gap: '4px', height: '6px' }}>
-              {Array.from({ length: 11 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    flex: 1,
-                    background: idx === step 
-                      ? 'var(--accent)' 
-                      : idx < step 
-                        ? 'var(--primary)' 
-                        : 'rgba(255,255,255,0.06)',
-                    borderRadius: '3px',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              ))}
+              {Array.from({ length: tipoPredefinido ? 10 : 11 }).map((_, idx) => {
+                const currentStepIndex = tipoPredefinido ? (step === 0 ? 0 : step - 1) : step;
+                const isActive = idx === currentStepIndex;
+                const isCompleted = idx < currentStepIndex;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      background: isActive 
+                        ? 'var(--accent)' 
+                        : isCompleted 
+                          ? 'var(--primary)' 
+                          : 'rgba(255,255,255,0.06)',
+                      borderRadius: '3px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
         )}
@@ -1108,55 +1195,278 @@ export default function PublicarAnuncioPage() {
           )}
 
           {/* ==========================================
-              STEP 2: CATEGORIA DO RESÍDUO (IBAMA Chapters)
+              STEP 2: CATEGORIA DO RESÍDUO (IBAMA Chapters / Autocomplete)
              ========================================== */}
           {step === 2 && (
             <div>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
-                Qual categoria de resíduo?
+                Dados do Produto & Matriz Materra Elo
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '28px' }}>
-                Selecione o capítulo correspondente no catálogo IBAMA (IN 13/2012).
+                Digite o termo popular/comercial do material para obter o compliance automático.
               </p>
 
-              <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label">Filtrar Categoria</label>
-                <input
-                  type="text"
-                  placeholder="Pesquise por nome ou código (ex: 'Metais', '12 01')"
-                  className="form-input"
-                  value={searchCategory}
-                  onChange={e => setSearchCategory(e.target.value)}
-                  style={{ background: '#000', color: '#fff', border: '1px solid #333' }}
-                />
-              </div>
+              {!selectedItem && !showManualFallback && (
+                <div>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">Busca do Material (Friendly Term)</label>
+                    <input
+                      type="text"
+                      placeholder="Digite ex: 'Farelo de soja', 'Rejeito de minério', 'Lâmpadas'..."
+                      className="form-input"
+                      value={buscaAmigavel}
+                      onChange={e => setBuscaAmigavel(e.target.value)}
+                      style={{ background: '#000', color: '#fff', border: '1px solid #333', padding: '12px' }}
+                    />
+                  </div>
 
-              <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '8px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '8px' }}>
-                {Object.keys(CATALOGO_IBAMA)
-                  .filter(cat => cat.toLowerCase().includes(searchCategory.toLowerCase()))
-                  .map(cat => {
-                    const isSelected = categoria === cat
-                    return (
-                      <div
-                        key={cat}
-                        onClick={() => { setCategoria(cat); setStep(3); }}
-                        style={{
-                          background: isSelected ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.01)',
-                          border: isSelected ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
-                          borderRadius: '6px',
-                          padding: '14px 18px',
-                          cursor: 'pointer',
-                          color: isSelected ? 'var(--accent)' : '#fff',
-                          fontSize: '0.9rem',
-                          fontWeight: isSelected ? 'bold' : 'normal',
-                          transition: 'all 0.15s'
-                        }}
-                      >
-                        {cat}
-                      </div>
-                    )
-                  })}
-              </div>
+                  {buscaAmigavel.trim().length > 1 && (
+                    <div style={{
+                      background: '#111',
+                      border: '1px solid #222',
+                      borderRadius: '8px',
+                      maxHeight: '260px',
+                      overflowY: 'auto',
+                      marginBottom: '20px'
+                    }}>
+                      {AUTOCOMPLETE_DICTIONARY.filter(item =>
+                        item.termo_amigavel.toLowerCase().includes(buscaAmigavel.toLowerCase())
+                      ).slice(0, 10).map(item => (
+                        <div
+                          key={item.termo_amigavel}
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setGrupo(item.grupo);
+                            setCategoriaSubcategoria(item.categoria_subcategoria);
+                            setCodigoIbama(item.codigo_ibama);
+                            setNomeMaterial(item.termo_amigavel);
+                            setTituloAnuncio(item.termo_amigavel);
+                            
+                            // Map friendly class to database enum
+                            let dbClasse = 'Classe IIB – inerte';
+                            if (item.classe_perigo_nbr.includes('Classe I')) {
+                              dbClasse = 'Classe I – perigoso';
+                            } else if (item.classe_perigo_nbr.includes('Classe II-A') || item.classe_perigo_nbr.includes('Classe IIA')) {
+                              dbClasse = 'Classe IIA – não inerte';
+                            }
+                            setClasse(dbClasse);
+                          }}
+                          style={{
+                            padding: '12px 16px',
+                            borderBottom: '1px solid #222',
+                            cursor: 'pointer',
+                            color: '#fff',
+                            fontSize: '0.9rem',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#1a1a1a' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                        >
+                          <span style={{ fontWeight: 'bold', color: 'var(--primary-500)' }}>{item.termo_amigavel}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#888', marginLeft: '10px' }}>
+                            (Grupo {item.grupo} • {item.classe_perigo_nbr})
+                          </span>
+                        </div>
+                      ))}
+                      {AUTOCOMPLETE_DICTIONARY.filter(item =>
+                        item.termo_amigavel.toLowerCase().includes(buscaAmigavel.toLowerCase())
+                      ).length === 0 && (
+                        <div style={{ padding: '16px', color: '#666', textAlign: 'center', fontSize: '0.95rem' }}>
+                          Nenhum material encontrado com este termo.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualFallback(true)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent)',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Ou escolha manualmente no catálogo IBAMA
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedItem && (
+                <div style={{
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255, 215, 0, 0.25)',
+                  borderRadius: '10px',
+                  padding: '24px',
+                  boxShadow: '0 0 15px rgba(255, 215, 0, 0.05)',
+                  marginBottom: '24px'
+                }}>
+                  <h3 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield size={18} style={{ color: 'var(--primary)' }} />
+                    Card de Compliance (Somente Leitura)
+                  </h3>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                    gap: '12px',
+                    marginBottom: '20px',
+                    background: '#121212',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: '1px solid #222'
+                  }}>
+                    <div>
+                      <span style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase' }}>Material</span>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: '#fff', marginTop: '2px' }}>{selectedItem.termo_amigavel}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase' }}>Materra Grupo</span>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: 'var(--primary-500)', marginTop: '2px' }}>
+                        Grupo {selectedItem.grupo}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase' }}>Código IBAMA</span>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: '#ccc', marginTop: '2px' }}>{selectedItem.codigo_ibama}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase' }}>Classe NBR</span>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: '#ccc', marginTop: '2px' }}>{selectedItem.classe_perigo_nbr}</strong>
+                    </div>
+                  </div>
+
+                  {/* Duties matrix warning based on group and type */}
+                  <div style={{
+                    background: selectedItem.grupo === 4 ? 'rgba(239, 83, 80, 0.06)' : 'rgba(0, 255, 102, 0.03)',
+                    border: `1px solid ${selectedItem.grupo === 4 ? '#ef5350' : '#28A745'}`,
+                    padding: '16px',
+                    borderRadius: '8px',
+                    color: '#eee',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.5',
+                    marginBottom: '24px'
+                  }}>
+                    <strong style={{ display: 'block', color: selectedItem.grupo === 4 ? '#ef5350' : '#28A745', marginBottom: '6px', fontSize: '0.9rem' }}>
+                      📋 INTEGRAÇÃO MATRIZ ELO — DEVERES LEGAIS:
+                    </strong>
+                    {selectedItem.grupo === 1 ? (
+                      tipoAnuncio === 'Oferta' ? (
+                        "Classificação confirmada: Grupo 1 (Coproduto). Deveres Legais: O Fornecedor (Você) emitirá apenas NF-e e Cadastro Técnico Estadual comum. A Transportadora portará o DANFE (sem exigência de licença ambiental). O Comprador precisará de LO Industrial padrão. Isento de MTR e CDF."
+                      ) : (
+                        "Demanda de Grupo 1 (Coproduto). Deveres Legais: O Fornecedor emitirá NF-e e CTF. A Transportadora usará DANFE (sem licença ambiental). Como Comprador, você precisará de LO Industrial padrão. Isento de MTR e CDF."
+                      )
+                    ) : (selectedItem.grupo === 2 || selectedItem.grupo === 3) ? (
+                      tipoAnuncio === 'Oferta' ? (
+                        `Classificação confirmada: Grupo ${selectedItem.grupo} (Resíduo Classe II). Deveres Legais: O Fornecedor (Você) precisará de LO com PGRS e CTF/APP ativo. A Transportadora exigirá Licença Ambiental de Transporte Rodoviário. O Comprador precisará de LO de Tratamento/Reciclagem. A emissão de MTR e CDF será obrigatória.`
+                      ) : (
+                        `Demanda de Grupo ${selectedItem.grupo}. Deveres Legais: O Fornecedor precisará de LO, PGRS e emitir o MTR. A Transportadora exigirá Licença Rodoviária. Você, como Comprador/Destinador, precisará de LO de Tratamento e será legalmente obrigado a gerar o CDF no SINIR.`
+                      )
+                    ) : (
+                      tipoAnuncio === 'Oferta' ? (
+                        "Classificação confirmada: Grupo 4 (Classe I - Perigoso). Deveres Legais Severos: O Fornecedor (Você) precisará de PGRS Classe I, Laudo e Ficha de Emergência. A Transportadora necessitará de Licença de Carga Perigosa, CIPP, curso MOPP, ANTT e Seguro. O Comprador exigirá LO restrita Classe I. MTR e CDF são mandatórios."
+                      ) : (
+                        "Demanda de Classe I. Deveres Legais Severos: O Fornecedor precisará de PGRS Classe I, Ficha de Emergência e emitirá MTR rígido. A Transportadora exigirá Licença de Carga Perigosa, CIPP e MOPP. Você, como Comprador, precisará de LO restrita Classe I e será obrigado a emitir o CDF."
+                      )
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setStep(3)}
+                      className="btn btn-primary"
+                      style={{ flex: 1, padding: '12px', color: '#000', fontWeight: 'bold' }}
+                    >
+                      ✔ SIM, CONCORDO COM A CLASSIFICAÇÃO
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedItem(null); setBuscaAmigavel(''); }}
+                      className="btn btn-secondary"
+                      style={{ padding: '12px 18px', background: '#1c1c1c', border: '1px solid #333' }}
+                    >
+                      ESCOLHER OUTRO TERMO
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showManualFallback && (
+                <div>
+                  <div className="form-group" style={{ marginBottom: '24px' }}>
+                    <label className="form-label">Filtrar Categoria</label>
+                    <input
+                      type="text"
+                      placeholder="Pesquise por nome ou código (ex: 'Metais', '12 01')"
+                      className="form-input"
+                      value={searchCategory}
+                      onChange={e => setSearchCategory(e.target.value)}
+                      style={{ background: '#000', color: '#fff', border: '1px solid #333', padding: '10px' }}
+                    />
+                  </div>
+
+                  <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '8px', marginBottom: '20px' }}>
+                    {Object.keys(CATALOGO_IBAMA)
+                      .filter(cat => cat.toLowerCase().includes(searchCategory.toLowerCase()))
+                      .map(cat => {
+                        const isSelected = categoria === cat
+                        return (
+                          <div
+                            key={cat}
+                            onClick={() => {
+                              setCategoria(cat);
+                              // Mock manual choice details
+                              setGrupo(cat.includes('Saúde') || cat.includes('Perigosos') || cat.includes('Óleos') ? 4 : 3);
+                              setCategoriaSubcategoria(cat);
+                              setSelectedItem({
+                                termo_amigavel: cat,
+                                grupo: cat.includes('Saúde') || cat.includes('Perigosos') || cat.includes('Óleos') ? 4 : 3,
+                                categoria_subcategoria: cat,
+                                codigo_ibama: CATALOGO_IBAMA[cat]?.cod || '00',
+                                classe_perigo_nbr: cat.includes('Saúde') || cat.includes('Perigosos') || cat.includes('Óleos') ? 'Classe I (Perigoso)' : 'Classe II-A'
+                              });
+                              setShowManualFallback(false);
+                            }}
+                            style={{
+                              background: isSelected ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.01)',
+                              border: isSelected ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                              borderRadius: '6px',
+                              padding: '12px 16px',
+                              cursor: 'pointer',
+                              color: isSelected ? 'var(--accent)' : '#fff',
+                              fontSize: '0.85rem'
+                            }}
+                          >
+                            {cat}
+                          </div>
+                        )
+                      })}
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualFallback(false)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--danger)',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      ← Voltar para Autocomplete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1250,10 +1560,10 @@ export default function PublicarAnuncioPage() {
                     )
                   })}
                 </div>
-                {classe === 'Classe I – perigoso' && (
+                {grupo === 4 && (
                   <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(255,77,77,0.06)', border: '1px solid rgba(255,77,77,0.2)', color: '#ef5350', fontSize: '0.8rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <AlertTriangle size={16} />
-                    <span>Atenção: Resíduos Classe I exigem anexar a FISPQ na etapa final de mídias.</span>
+                    <span>Atenção: Resíduos do Grupo 4 exigem anexar a FISPQ na etapa final de mídias.</span>
                   </div>
                 )}
               </div>
@@ -1354,25 +1664,49 @@ export default function PublicarAnuncioPage() {
                 )}
               </div>
 
-              {/* Origem Processo */}
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Origem / Processo Gerador *</span>
-                  <span style={{ fontSize: '0.75rem', color: origemProcesso.length >= 20 ? '#4caf50' : '#ff5353' }}>
-                    {origemProcesso.length}/500 (mínimo 20 caracteres)
-                  </span>
-                </label>
-                <textarea
-                  className="form-input"
-                  rows={3}
-                  placeholder="Descreva detalhadamente de onde vem o material (ex: refugo do setor de corte de chapas)..."
-                  value={origemProcesso}
-                  onChange={e => setOrigemProcesso(e.target.value)}
-                  minLength={20}
-                  maxLength={500}
-                  required
-                />
-              </div>
+              {/* Origem Processo / Especificações Técnicas */}
+              {tipoAnuncio === 'Oferta' ? (
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Origem / Processo Gerador *</span>
+                    <span style={{ fontSize: '0.75rem', color: origemProcessoGerador.length >= 20 ? '#4caf50' : '#ff5353' }}>
+                      {origemProcessoGerador.length}/500 (mínimo 20 caracteres)
+                    </span>
+                  </label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="Descreva detalhadamente de onde vem o material (ex: refugo do setor de corte de chapas)..."
+                    value={origemProcessoGerador}
+                    onChange={e => {
+                      setOrigemProcessoGerador(e.target.value);
+                      setOrigemProcesso(e.target.value); // fallback legacy
+                    }}
+                    minLength={20}
+                    maxLength={500}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Especificações Técnicas e Exigências *</span>
+                    <span style={{ fontSize: '0.75rem', color: especificacoesTecnicasExigencias.length >= 20 ? '#4caf50' : '#ff5353' }}>
+                      {especificacoesTecnicasExigencias.length}/500 (mínimo 20 caracteres)
+                    </span>
+                  </label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="Descreva as exigências do material a ser comprado (ex: granulometria menor que 10mm, umidade menor que 15%)..."
+                    value={especificacoesTecnicasExigencias}
+                    onChange={e => setEspecificacoesTecnicasExigencias(e.target.value)}
+                    minLength={20}
+                    maxLength={500}
+                    required
+                  />
+                </div>
+              )}
 
               {/* Características e umidade */}
               <div className="form-group" style={{ marginBottom: '20px' }}>
@@ -1804,15 +2138,15 @@ export default function PublicarAnuncioPage() {
 
               {/* Transporte Obrigatório */}
               <div className="form-group">
-                <label className="form-label">Exigência de Transporte Rodoviário *</label>
+                <label className="form-label">Exigência de Transporte Rodoviário * {grupo !== null && <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }}>(Travado por Compliance do Grupo {grupo})</span>}</label>
                 <div style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    <input type="radio" checked={transporteObrigatorio === 'Classe I'} onChange={() => setTransporteObrigatorio('Classe I')} />
-                    Exige MOPP / CIPP / Licenças ambientais específicas (Transporte de Perigoso)
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: grupo !== null ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: grupo === 4 || grupo === null ? 1 : 0.4 }}>
+                    <input type="radio" checked={transporteObrigatorio === 'Classe I'} onChange={() => setTransporteObrigatorio('Classe I')} disabled={grupo !== null} />
+                    Classe I (Exige MOPP / CIPP / Licenças ambientais específicas)
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    <input type="radio" checked={transporteObrigatorio === 'Classe II'} onChange={() => setTransporteObrigatorio('Classe II')} />
-                    Transporte comum (sem requisitos de classe perigosa)
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: grupo !== null ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: (grupo !== 4 && grupo !== null) || grupo === null ? 1 : 0.4 }}>
+                    <input type="radio" checked={transporteObrigatorio === 'Classe II'} onChange={() => setTransporteObrigatorio('Classe II')} disabled={grupo !== null} />
+                    Classe II (Transporte Comum sem periculosidade)
                   </label>
                 </div>
               </div>
@@ -1990,9 +2324,239 @@ export default function PublicarAnuncioPage() {
           )}
 
           {/* ==========================================
-              STEP 7: DURAÇÃO DO LEILÃO + PROGRAMAÇÃO
+              STEP 7: REQUISITOS DA CONTRAPARTE & PROJEÇÃO MTR/CDF
              ========================================== */}
           {step === 7 && (
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
+                Requisitos & Projeção MTR/CDF
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '28px' }}>
+                Defina suas preferências de qualificação e consulte as projeções de documentos de rastreamento.
+              </p>
+
+              {/* Selo Mínimo */}
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label">Selo Materra Mínimo Recomendado</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '8px' }}>
+                  {[
+                    { val: 'Sem exigência', label: 'Livre', desc: 'Qualquer selo' },
+                    { val: 'Bronze', label: 'Bronze ⭐', desc: 'Score ≥ 42' },
+                    { val: 'Prata', label: 'Prata ⭐⭐', desc: 'Score ≥ 70' },
+                    { val: 'Ouro', label: 'Ouro ⭐⭐⭐', desc: 'Score ≥ 85' }
+                  ].map(item => {
+                    const active = seloMinimo === item.val
+                    return (
+                      <div
+                        key={item.val}
+                        onClick={() => setSeloMinimo(item.val)}
+                        style={{
+                          background: active ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.01)',
+                          border: active ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                          borderRadius: '6px',
+                          padding: '12px 6px',
+                          textAlign: 'center',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <strong style={{ fontSize: '0.85rem', color: active ? 'var(--accent)' : '#fff' }}>{item.label}</strong>
+                        <span style={{ display: 'block', fontSize: '0.7rem', color: '#777', marginTop: '2px' }}>{item.desc}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Score slider */}
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Reputação Mínima Recomendada (Score)</span>
+                  <strong>{scoreMinimo === 0 ? 'Sem exigência' : `${scoreMinimo}/100`}</strong>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="10"
+                  value={scoreMinimo}
+                  onChange={e => setScoreMinimo(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--primary-500)' }}
+                />
+              </div>
+
+              {/* Documentos Checklist */}
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label">
+                  Documentos Solicitados para Homologar
+                  {grupo !== null && grupo > 1 && (
+                    <span style={{ color: 'var(--primary)', fontSize: '0.75rem', marginLeft: '8px' }}>
+                      (🔒 Documentos obrigatórios travados por compliance legal para Grupo {grupo})
+                    </span>
+                  )}
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: '8px' }}>
+                  {[
+                    'Licença Ambiental válida',
+                    'CADRI (se Classe I)',
+                    'Licença RSS (hospitalar)',
+                    'Licença de Coprocessamento',
+                    'CTF/APP-IBAMA regulamentado',
+                    'Registro RNTRC (transportadora)',
+                    'MOPP do motorista (Classe I)',
+                    'PGRS estruturado',
+                    'Outros'
+                  ].map(doc => {
+                    // Check if document is locked based on group value
+                    let isLocked = false
+                    if (grupo === 4) {
+                      isLocked = ['CADRI (se Classe I)', 'MOPP do motorista (Classe I)', 'Licença Ambiental válida', 'CTF/APP-IBAMA regulamentado'].includes(doc)
+                    } else if (grupo === 2 || grupo === 3) {
+                      isLocked = ['Licença Ambiental válida', 'CTF/APP-IBAMA regulamentado'].includes(doc)
+                    }
+
+                    const checked = documentosSolicitados.includes(doc) || isLocked
+                    return (
+                      <label key={doc} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.8rem',
+                        color: isLocked ? 'var(--primary)' : '#ccc',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        opacity: isLocked ? 0.95 : 1
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={isLocked}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setDocumentosSolicitados(prev => [...prev, doc])
+                            } else {
+                              setDocumentosSolicitados(prev => prev.filter(d => d !== doc))
+                            }
+                          }}
+                        />
+                        {doc} {isLocked && '🔒'}
+                      </label>
+                    )
+                  })}
+                </div>
+                {documentosSolicitados.includes('Outros') && (
+                  <textarea
+                    className="form-input"
+                    rows={2}
+                    placeholder="Descreva quais outros documentos você necessita do parceiro..."
+                    style={{ marginTop: '10px', fontSize: '0.85rem' }}
+                    value={documentoOutro}
+                    onChange={e => setDocumentoOutro(e.target.value)}
+                    required
+                  />
+                )}
+              </div>
+
+              {/* Projeção MTR / CDF Box */}
+              <div style={{
+                background: '#111111',
+                border: '1px solid #333333',
+                borderRadius: '8px',
+                padding: '20px',
+                color: '#fff',
+                marginBottom: '24px'
+              }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
+                  📊 Projeção de Rastreamento (MTR & CDF)
+                </span>
+                {(() => {
+                  if (grupo === 1) {
+                    return (
+                      <p style={{ fontSize: '0.85rem', color: '#88ff88', margin: 0, fontWeight: 'bold' }}>
+                        Isento de MTR e CDF (Grupo 1 Coproduto). Operação livre de manifestos de resíduos.
+                      </p>
+                    )
+                  }
+
+                  const monthsStr = String(duracaoContrato || '12 meses').split(' ')[0]
+                  const months = monthsStr === 'Indefinido' ? 12 : parseInt(monthsStr) || 12
+                  
+                  let collectionsPerMonth = 1
+                  if (frequencia === 'Semanal') collectionsPerMonth = 4.33
+                  else if (frequencia === 'Quinzenal') collectionsPerMonth = 2
+                  else if (frequencia === 'Mensal') collectionsPerMonth = 1
+                  else if (frequencia === 'Bimestral') collectionsPerMonth = 0.5
+                  else if (frequencia === 'Trimestral') collectionsPerMonth = 0.33
+                  
+                  const count = tipoColeta === 'COLETA ÚNICA' ? 1 : Math.ceil(months * collectionsPerMonth)
+                  const mtrTotal = count
+                  const cdfTotal = count
+
+                  return (
+                    <div>
+                      <p style={{ fontSize: '0.85rem', color: '#aaa', margin: '0 0 12px 0' }}>
+                        Modelo de Destinação: <strong>{tipoColeta === 'COLETA ÚNICA' ? 'Lote Único' : `Contrato Recorrente (${frequencia})`}</strong>
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span>MTRs Projetados (Manifesto de Transporte):</span>
+                          <strong style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>{mtrTotal} emissões</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span>CDFs Projetados (Certificado de Destinação):</span>
+                          <strong style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>{cdfTotal} certificados</strong>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: '#666', display: 'block', marginTop: '12px' }}>
+                        * Projeção calculada automaticamente com base na frequência da coleta e a vigência estimada. Emissão integrada com o SINIR.
+                      </span>
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* Distancia */}
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label">Distância Máxima Aceitável</label>
+                <select className="form-select" value={distanciaMaxima} onChange={e => setDistanciaMaxima(e.target.value)} style={{ width: '100%' }}>
+                  <option value="Sem limite">Sem limite (Qualquer região)</option>
+                  <option value="50 km">Até 50 km</option>
+                  <option value="100 km">Até 100 km</option>
+                  <option value="300 km">Até 300 km</option>
+                  <option value="500 km">Até 500 km</option>
+                </select>
+              </div>
+
+              {/* Frequencia compativel */}
+              {tipoColeta === 'COLETA RECORRENTE' && (
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input type="checkbox" checked={frequenciaCompativelExigida} onChange={e => setFrequenciaCompativelExigida(e.target.checked)} />
+                    Exigir obrigatoriamente que a contraparte atenda à frequência configurada
+                  </label>
+                </div>
+              )}
+
+              {/* Requisitos adicionais por escrito */}
+              <div className="form-group">
+                <label className="form-label">Requisitos adicionais (Observações livres)</label>
+                <textarea
+                  className="form-input"
+                  rows={2}
+                  placeholder="Ex: A coleta deve ser agendada em horário comercial com 24h de antecedência..."
+                  value={requisitosAdicionaisObservacoes}
+                  onChange={e => {
+                    setRequisitosAdicionaisObservacoes(e.target.value);
+                    setRequisitosEscrito(e.target.value); // legacy fallback
+                  }}
+                  maxLength={500}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ==========================================
+              STEP 8: DURAÇÃO DO LEILÃO & PRAZO
+             ========================================== */}
+          {step === 8 && (
             <div>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '28px' }}>
                 Configuração do Leilão & Prazo
@@ -2110,162 +2674,6 @@ export default function PublicarAnuncioPage() {
           )}
 
           {/* ==========================================
-              STEP 8: REQUISITOS DA CONTRAPARTE
-             ========================================== */}
-          {step === 8 && (
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
-                Requisitos da Contraparte
-              </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '28px' }}>
-                Defina suas preferências de qualificação. Os interessados que não cumprirem verão alertas, mas NÃO serão bloqueados de negociar.
-              </p>
-
-              {/* Selo Mínimo */}
-              <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label">Selo Materra Mínimo Recomendado</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '8px' }}>
-                  {[
-                    { val: 'Sem exigência', label: 'Livre', desc: 'Qualquer selo' },
-                    { val: 'Bronze', label: 'Bronze ⭐', desc: 'Score ≥ 42' },
-                    { val: 'Prata', label: 'Prata ⭐⭐', desc: 'Score ≥ 70' },
-                    { val: 'Ouro', label: 'Ouro ⭐⭐⭐', desc: 'Score ≥ 85' }
-                  ].map(item => {
-                    const active = seloMinimo === item.val
-                    return (
-                      <div
-                        key={item.val}
-                        onClick={() => setSeloMinimo(item.val)}
-                        style={{
-                          background: active ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.01)',
-                          border: active ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
-                          borderRadius: '6px',
-                          padding: '12px 6px',
-                          textAlign: 'center',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <strong style={{ fontSize: '0.85rem', color: active ? 'var(--accent)' : '#fff' }}>{item.label}</strong>
-                        <span style={{ display: 'block', fontSize: '0.7rem', color: '#777', marginTop: '2px' }}>{item.desc}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Score slider */}
-              <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Reputação Mínima Recomendada (Score)</span>
-                  <strong>{scoreMinimo === 0 ? 'Sem exigência' : `${scoreMinimo}/100`}</strong>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="10"
-                  value={scoreMinimo}
-                  onChange={e => setScoreMinimo(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: 'var(--primary-500)' }}
-                />
-              </div>
-
-              {/* Documentos Checklist */}
-              <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label">Documentos Solicitados para Homologar</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: '8px' }}>
-                  {[
-                    'Licença Ambiental válida',
-                    'CADRI (se Classe I)',
-                    'Licença RSS (hospitalar)',
-                    'Licença de Coprocessamento',
-                    'CTF/APP-IBAMA regulamentado',
-                    'Registro RNTRC (transportadora)',
-                    'MOPP do motorista (Classe I)',
-                    'PGRS estruturado',
-                    'Outros'
-                  ].map(doc => {
-                    const checked = documentosSolicitados.includes(doc)
-                    return (
-                      <label key={doc} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#ccc', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={e => {
-                            if (e.target.checked) {
-                              setDocumentosSolicitados(prev => [...prev, doc])
-                            } else {
-                              setDocumentosSolicitados(prev => prev.filter(d => d !== doc))
-                            }
-                          }}
-                        />
-                        {doc}
-                      </label>
-                    )
-                  })}
-                </div>
-                {documentosSolicitados.includes('Outros') && (
-                  <textarea
-                    className="form-input"
-                    rows={2}
-                    placeholder="Descreva quais outros documentos você necessita do parceiro..."
-                    style={{ marginTop: '10px', fontSize: '0.85rem' }}
-                    value={documentoOutro}
-                    onChange={e => setDocumentoOutro(e.target.value)}
-                    required
-                  />
-                )}
-              </div>
-
-              {/* Distancia */}
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Distância Máxima Aceitável</label>
-                <select className="form-select" value={distanciaMaxima} onChange={e => setDistanciaMaxima(e.target.value)} style={{ width: '100%' }}>
-                  <option value="Sem limite">Sem limite (Qualquer região)</option>
-                  <option value="50 km">Até 50 km</option>
-                  <option value="100 km">Até 100 km</option>
-                  <option value="300 km">Até 300 km</option>
-                  <option value="500 km">Até 500 km</option>
-                </select>
-              </div>
-
-              {/* Frequencia compativel */}
-              {tipoColeta === 'COLETA RECORRENTE' && (
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
-                    <input type="checkbox" checked={frequenciaCompativelExigida} onChange={e => setFrequenciaCompativelExigida(e.target.checked)} />
-                    Exigir obrigatoriamente que a contraparte atenda à frequência configurada
-                  </label>
-                </div>
-              )}
-
-              {/* Requisitos adicionais por escrito */}
-              <div className="form-group">
-                <label className="form-label">Requisitos adicionais (Observações livres)</label>
-                <textarea
-                  className="form-input"
-                  rows={2}
-                  placeholder="Ex: A coleta deve ser agendada em horário comercial com 24h de antecedência..."
-                  value={requisitosEscrito}
-                  onChange={e => setRequisitosEscrito(e.target.value)}
-                  maxLength={500}
-                />
-              </div>
-
-              {/* Resumo de requisitos box */}
-              <div style={{ marginTop: '24px', padding: '16px', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' }}>
-                <strong style={{ fontSize: '0.85rem', color: '#fff', display: 'block', marginBottom: '8px' }}>🎯 Resumo de Requisitos Configurados</strong>
-                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.8rem', color: '#aaa', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <li>Selo recomendado: {seloMinimo} {scoreMinimo > 0 && `(Score mínimo: ${scoreMinimo})`}</li>
-                  <li>Documentos: {documentosSolicitados.join(', ') || 'Nenhum'}</li>
-                  <li>Frequência: {tipoColeta === 'COLETA RECORRENTE' ? `${frequencia} (${frequenciaCompativelExigida ? 'Exigida' : 'Preferencial'})` : 'Lote Único'}</li>
-                  <li>Frete: Pago por {quemArcaFrete === 'EU' ? 'Você (Anunciante)' : 'Contraparte'}</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* ==========================================
               STEP 9: MÍDIA E DOCUMENTAÇÃO
              ========================================== */}
           {step === 9 && (
@@ -2353,8 +2761,8 @@ export default function PublicarAnuncioPage() {
                 )}
               </div>
 
-              {/* FISPQ (Mandatory for Class I) */}
-              {classe === 'Classe I – perigoso' ? (
+              {/* FISPQ (Mandatory for Class I / Grupo 4) */}
+              {grupo === 4 ? (
                 <div className="form-group" style={{ background: 'rgba(239, 83, 80, 0.04)', border: '1px solid var(--danger)', padding: '20px', borderRadius: '8px' }}>
                   <label className="form-label" style={{ color: '#ef5350', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <AlertTriangle size={16} /> FISPQ (Ficha de Segurança Química) * OBRIGATÓRIA
@@ -2623,9 +3031,9 @@ export default function PublicarAnuncioPage() {
                 </label>
               </div>
 
-              {classe === 'Classe I – perigoso' && !fispqFile && (
+              {grupo === 4 && !fispqFile && (
                 <div style={{ marginBottom: '16px', background: 'rgba(239, 83, 80, 0.05)', border: '1px solid #ef5350', color: '#ef5350', padding: '12px', borderRadius: '6px', fontSize: '0.8rem' }}>
-                  ⚠️ Atenção: A FISPQ é obrigatória para resíduos Classe I (Perigoso). Volte à seção 9 e envie o documento para publicar.
+                  ⚠️ Atenção: A FISPQ é obrigatória para resíduos do Grupo 4 (Perigoso). Volte à etapa de Mídias e envie o documento para publicar.
                 </div>
               )}
             </div>

@@ -81,6 +81,7 @@ export default function VitrineAnunciosPage() {
   const [searchName, setSearchName] = useState('')
 
   // Advanced Filters state
+  const [filterGrupo, setFilterGrupo] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [filterResiduo, setFilterResiduo] = useState('')
   const [filterClasse, setFilterClasse] = useState('')
@@ -98,6 +99,13 @@ export default function VitrineAnunciosPage() {
   const [filterDocs, setFilterDocs] = useState('')
   const [filterContract, setFilterContract] = useState('') // 3, 6, 12, 18, 24 meses, Indefinido
   const [filterUrgent, setFilterUrgent] = useState(false) // Checkbox for emergencial
+  const [filterDistancia, setFilterDistancia] = useState('Sem limite')
+  const [filterFluxo, setFilterFluxo] = useState('')
+  const [filterAceitaMenor, setFilterAceitaMenor] = useState(false)
+  const [filterSituacao, setFilterSituacao] = useState('')
+  const [filterTemAvaliacao, setFilterTemAvaliacao] = useState('')
+  const [filterResponsavelFrete, setFilterResponsavelFrete] = useState('')
+  const [filterInfraestrutura, setFilterInfraestrutura] = useState('')
   const [sortBy, setSortBy] = useState('Mais recente')
 
   // Inline expanded card id (Passo 10 collapsible style)
@@ -253,27 +261,38 @@ export default function VitrineAnunciosPage() {
   // Filter and sort listings
   const filteredListings = listings
     .filter(item => {
-      // 1. Tab check
+      // 1. Tab check (tipo_anuncio matching activeTab)
       if (item.tipo_anuncio !== activeTab && item.tipo_anuncio !== `${activeTab} de resíduo`) {
         return false
       }
 
-      // 2. Name search (Passo 0)
+      // 2. Name search (nome_material / searchName)
       if (searchName) {
         const query = searchName.toLowerCase()
-        const nameMatch = item.titulo?.toLowerCase().includes(query)
-        const residueMatch = item.residuo?.toLowerCase().includes(query)
-        const codeMatch = item.codigo?.toLowerCase().includes(query)
-        if (!nameMatch && !residueMatch && !codeMatch) return false
+        const itemNome = item.nome_material || item.titulo || item.residuo || ''
+        const codeMatch = String(item.codigo || '').toLowerCase().includes(query)
+        if (!itemNome.toLowerCase().includes(query) && !codeMatch) return false
       }
 
-      // 3. Category
-      if (filterCategory && item.categoria !== filterCategory) return false
+      // 3. Grupo check (Materra Compliance Group)
+      if (filterGrupo) {
+        const itemGrupo = item.grupo !== undefined && item.grupo !== null ? item.grupo : (item.classe?.includes('Classe I') ? 4 : 3)
+        if (String(itemGrupo) !== filterGrupo) return false
+      }
 
-      // 4. Specific waste
-      if (filterResiduo && item.residuo !== filterResiduo) return false
+      // 4. Categoria / Categoria_subcategoria
+      if (filterCategory) {
+        const itemCat = item.categoria_subcategoria || item.categoria || ''
+        if (!itemCat.toLowerCase().includes(filterCategory.toLowerCase())) return false
+      }
 
-      // 5. Class
+      // 5. Resíduo específico
+      if (filterResiduo) {
+        const itemRes = item.residuo || ''
+        if (!itemRes.toLowerCase().includes(filterResiduo.toLowerCase())) return false
+      }
+
+      // 6. Classe
       if (filterClasse && filterClasse !== 'Todas') {
         const itemClass = item.classe || ''
         if (filterClasse === 'I' && !itemClass.includes('I –') && itemClass !== 'I') return false
@@ -281,41 +300,82 @@ export default function VitrineAnunciosPage() {
         if (filterClasse === 'IIB' && !itemClass.includes('IIB') && itemClass !== 'IIB') return false
       }
 
-      // 6. Estado físico
+      // 7. Distancia (Simulated distance filter check)
+      if (filterDistancia && filterDistancia !== 'Sem limite') {
+        const maxDist = parseInt(filterDistancia) || 9999
+        const itemDist = item.distancia_km !== undefined ? item.distancia_km : 120
+        if (itemDist > maxDist) return false
+      }
+
+      // 8. Tipo_fluxo (VENDA, PASSIVO, DOACAO, COMPRA)
+      if (filterFluxo) {
+        const itemFluxo = item.tipo_fluxo || (item.forma_cobranca?.includes('Recebo') ? 'VENDA' : item.forma_cobranca?.includes('Doação') ? 'DOACAO' : 'PASSIVO')
+        if (itemFluxo !== filterFluxo) return false
+      }
+
+      // 9. Regime_fornecimento (LOTE_UNICO, CONTRATO)
+      if (filterContract) {
+        const itemRegime = item.regime_fornecimento || (item.prazo_recorrencia ? 'CONTRATO' : 'LOTE_UNICO')
+        if (filterContract === 'Lote Único' && itemRegime !== 'LOTE_UNICO') return false
+        if (filterContract === 'Contrato' && itemRegime !== 'CONTRATO') return false
+      }
+
+      // 10. Volume_total (Volume Range check)
+      const itemVol = item.volume_total !== undefined ? item.volume_total : item.quantidade
+      if (filterQtyMin && itemVol < parseFloat(filterQtyMin)) return false
+      if (filterQtyMax && itemVol > parseFloat(filterQtyMax)) return false
+
+      // 11. Aceita_menor_valor (Checkbox / boolean)
+      if (filterAceitaMenor && !item.aceita_menor_valor) return false
+
+      // 12. Preco_unidade (Price Range check)
+      const itemPrice = item.preco_unidade !== undefined ? item.preco_unidade : item.valor_desejado
+      if (filterPriceMin && itemPrice < parseFloat(filterPriceMin)) return false
+      if (filterPriceMax && itemPrice > parseFloat(filterPriceMax)) return false
+
+      // 13. Situacao_anuncio (NORMAL, DESTAQUE, EMERGENCIA)
+      if (filterSituacao) {
+        const itemSituacao = item.situacao_anuncio || (item.urgencia_prazo === 'Urgente' ? 'EMERGENCIA' : 'NORMAL')
+        if (itemSituacao !== filterSituacao) return false
+      }
+
+      // 14. Selo_minimo (LIVRE, BRONZE, PRATA, OURO)
+      if (filterSelo) {
+        const itemSelo = item.selo_minimo || (item.cadastros?.nivel_selo === 'Sem' ? 'LIVRE' : String(item.cadastros?.nivel_selo || 'LIVRE').toUpperCase())
+        if (filterSelo !== 'LIVRE' && itemSelo !== filterSelo) return false
+      }
+
+      // 15. Tem_avaliacao (Checkbox / boolean)
+      if (filterTemAvaliacao) {
+        const itemAval = item.tem_avaliacao !== undefined ? item.tem_avaliacao : item.tem_licenca
+        const expectedAval = filterTemAvaliacao === 'true'
+        if (itemAval !== expectedAval) return false
+      }
+
+      // 16. Responsavel_frete (true = Advertiser, false = Contraparte)
+      if (filterResponsavelFrete) {
+        const itemFrete = item.responsavel_frete !== undefined ? item.responsavel_frete : (item.quem_arca_frete === 'EU')
+        const expectedFrete = filterResponsavelFrete === 'true'
+        if (itemFrete !== expectedFrete) return false
+      }
+
+      // 17. Infraestrutura_minima
+      if (filterInfraestrutura) {
+        const itemInfra = item.infraestrutura_minima || []
+        if (!itemInfra.includes(filterInfraestrutura)) return false
+      }
+
+      // 18. Estado físico
       if (filterEstadoFisico && item.estado_fisico !== filterEstadoFisico) return false
 
-      // 7. Acondicionamento
+      // 19. Acondicionamento
       if (filterAcondicionamento && !String(item.acondicionamento || '').includes(filterAcondicionamento)) return false
 
-      // 8. Location
+      // 20. Location (UF & Cidade)
       if (filterUf && item.uf !== filterUf) return false
       if (filterMunicipio && !item.municipio?.toLowerCase().includes(filterMunicipio.toLowerCase())) return false
 
-      // 9. Quantidade
-      if (filterQtyMin && item.quantidade < parseFloat(filterQtyMin)) return false
-      if (filterQtyMax && item.quantidade > parseFloat(filterQtyMax)) return false
-      if (filterQtyUnit && item.unidade !== filterQtyUnit) return false
-
-      // 10. Frequência
-      if (filterFrequencia && item.frequencia !== filterFrequencia) return false
-
-      // 11. Price
-      if (filterPriceMin && item.valor_desejado < parseFloat(filterPriceMin)) return false
-      if (filterPriceMax && item.valor_desejado > parseFloat(filterPriceMax)) return false
-
-      // 12. Selo
-      if (filterSelo) {
-        const itemSelo = item.cadastros?.nivel_selo || 'Sem'
-        if (itemSelo !== filterSelo) return false
-      }
-
-      // 13. Document check
-      if (filterDocs === 'Com licença/MTR' && !item.tem_licenca) return false
-
-      // 14. Contract length
-      if (filterContract && item.prazo_recorrencia !== filterContract) return false
-
-      // 15. Urgent filter
+      // 21. Legacy Urgent filter (keeps fallback matching)
       if (filterUrgent && item.urgencia_prazo !== 'Urgente') return false
 
       return true
@@ -631,32 +691,49 @@ export default function VitrineAnunciosPage() {
           border: '1px solid var(--border-color)',
           borderRadius: '12px',
           padding: '20px',
-          height: 'fit-content'
+          maxHeight: 'calc(100vh - 140px)',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          position: 'sticky',
+          top: '90px',
+          zIndex: 10
         }}>
           <h2 style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-heading)' }}>
             <span>Filtros Avançados</span>
             <button onClick={() => {
-              setFilterCategory(''); setFilterResiduo(''); setFilterClasse('');
+              setFilterGrupo(''); setFilterCategory(''); setFilterResiduo(''); setFilterClasse('');
               setFilterEstadoFisico(''); setFilterAcondicionamento(''); setFilterUf('');
               setFilterMunicipio(''); setFilterQtyMin(''); setFilterQtyMax('');
               setFilterFrequencia(''); setFilterPriceMin(''); setFilterPriceMax('');
               setFilterSelo(''); setFilterDocs(''); setFilterContract('');
               setFilterUrgent(false); setSearchName('');
+              setFilterDistancia('Sem limite'); setFilterFluxo('');
+              setFilterAceitaMenor(false); setFilterSituacao('');
+              setFilterTemAvaliacao(''); setFilterResponsavelFrete('');
+              setFilterInfraestrutura('');
             }} style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>
               Limpar Todos
             </button>
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Urgente Toggle */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#ef5350', cursor: 'pointer', fontWeight: 'bold', background: 'rgba(239,83,80,0.06)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239,83,80,0.2)' }}>
-              <input type="checkbox" checked={filterUrgent} onChange={e => setFilterUrgent(e.target.checked)} />
-              🚨 Apenas Coletas Urgentes
-            </label>
+            {/* 1. Nome do Material (Filtro de busca livre já integrado na barra de busca superior, mas adicionamos um aviso ou caixa extra se o usuário quiser) */}
 
-            {/* Category */}
+            {/* 2. Grupo Compliance */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Categoria</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Compliance Grupo</label>
+              <select className="form-select" value={filterGrupo} onChange={e => setFilterGrupo(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="1">Grupo 1 (Coproduto)</option>
+                <option value="2">Grupo 2 (Resíduo Classe II-A)</option>
+                <option value="3">Grupo 3 (Resíduo Classe II-B)</option>
+                <option value="4">Grupo 4 (Classe I Perigoso)</option>
+              </select>
+            </div>
+
+            {/* 3. Categoria IBAMA */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Categoria / Capítulo</label>
               <select className="form-select" value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setFilterResiduo(''); }}>
                 <option value="">Todas</option>
                 {Object.keys(CATALOGO_MATERRA_ELO).map(cat => (
@@ -677,136 +754,130 @@ export default function VitrineAnunciosPage() {
               </div>
             )}
 
-            {/* Classe */}
+            {/* 4. Situação do Anúncio */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Classe do Resíduo</label>
-              <select className="form-select" value={filterClasse} onChange={e => setFilterClasse(e.target.value)}>
-                <option value="Todas">Todas</option>
-                <option value="I">Classe I (Perigoso)</option>
-                <option value="IIA">Classe IIA (Não Inerte)</option>
-                <option value="IIB">Classe IIB (Inerte)</option>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Situação do Anúncio</label>
+              <select className="form-select" value={filterSituacao} onChange={e => {
+                setFilterSituacao(e.target.value);
+                setFilterUrgent(e.target.value === 'EMERGENCIA');
+              }}>
+                <option value="">Todas</option>
+                <option value="NORMAL">Normal</option>
+                <option value="DESTAQUE">Destaque (Selo)</option>
+                <option value="EMERGENCIA">🚨 Emergência (Urgente)</option>
               </select>
             </div>
 
-            {/* Prazo Recorrência (Duração Contrato) */}
+            {/* 5. Tipo de Fluxo */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Prazo do Contrato</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Tipo de Fluxo</label>
+              <select className="form-select" value={filterFluxo} onChange={e => setFilterFluxo(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="VENDA">Venda (Oferta comercial)</option>
+                <option value="COMPRA">Compra (Demanda comercial)</option>
+                <option value="PASSIVO">Passivo (Pago para destinar)</option>
+                <option value="DOACAO">Doação (Retirada grátis)</option>
+              </select>
+            </div>
+
+            {/* 6. Regime de Fornecimento */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Regime de Fornecimento</label>
               <select className="form-select" value={filterContract} onChange={e => setFilterContract(e.target.value)}>
                 <option value="">Todos</option>
-                <option value="3 meses">3 meses</option>
-                <option value="6 meses">6 meses</option>
-                <option value="12 meses">12 meses</option>
-                <option value="18 meses">18 meses</option>
-                <option value="24 meses">24 meses</option>
-                <option value="Indefinido">Indefinido</option>
-                <option value="Lote Único">Lote Único / Avulso</option>
+                <option value="Lote Único">Lote Único</option>
+                <option value="Contrato">Contrato Recorrente</option>
               </select>
             </div>
 
-            {/* Estado Físico */}
+            {/* 7. Volume Total Range */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Estado Físico</label>
-              <select className="form-select" value={filterEstadoFisico} onChange={e => setFilterEstadoFisico(e.target.value)}>
-                <option value="">Todos</option>
-                <option value="Sólido">Sólido</option>
-                <option value="Líquido">Líquido</option>
-                <option value="Semissólido">Semissólido</option>
-                <option value="Pastoso">Pastoso</option>
-                <option value="Gasoso">Gasoso</option>
-              </select>
-            </div>
-
-            {/* Acondicionamento */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Acondicionamento</label>
-              <select className="form-select" value={filterAcondicionamento} onChange={e => setFilterAcondicionamento(e.target.value)}>
-                <option value="">Todos</option>
-                {ACONDICIONAMENTOS.map(cond => (
-                  <option key={cond} value={cond}>{cond}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Localização */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Estado (UF)</label>
-                <select className="form-select" value={filterUf} onChange={e => setFilterUf(e.target.value)}>
-                  <option value="">Todos</option>
-                  {ESTADOS_BRASIL.map(uf => (
-                    <option key={uf} value={uf}>{uf}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Cidade</label>
-                <input
-                  type="text"
-                  placeholder="Cidade"
-                  className="form-input"
-                  value={filterMunicipio}
-                  onChange={e => setFilterMunicipio(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Quantidade */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Faixa Quantidade</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Volume Total</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input type="number" placeholder="Mín" className="form-input" style={{ width: '50%' }} value={filterQtyMin} onChange={e => setFilterQtyMin(e.target.value)} />
                 <input type="number" placeholder="Máx" className="form-input" style={{ width: '50%' }} value={filterQtyMax} onChange={e => setFilterQtyMax(e.target.value)} />
               </div>
               <select className="form-select" style={{ marginTop: '6px' }} value={filterQtyUnit} onChange={e => setFilterQtyUnit(e.target.value)}>
-                <option value="t">t</option>
-                <option value="kg">kg</option>
-                <option value="L">L</option>
-                <option value="m³">m³</option>
-                <option value="unidade">unidade</option>
+                <option value="t">t (Tonelada)</option>
+                <option value="kg">kg (Quilograma)</option>
+                <option value="L">L (Litro)</option>
+                <option value="m³">m³ (Metro Cúbico)</option>
+                <option value="unidade">unidades</option>
               </select>
             </div>
 
-            {/* Frequência */}
+            {/* 8. Preço Unitário Range */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Frequência</label>
-              <select className="form-select" value={filterFrequencia} onChange={e => setFilterFrequencia(e.target.value)}>
-                <option value="">Todas</option>
-                <option value="Única">Única</option>
-                <option value="Semanal">Semanal</option>
-                <option value="Mensal">Mensal</option>
-                <option value="Recorrente">Recorrente</option>
-              </select>
-            </div>
-
-            {/* Preço */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Faixa de Preço (R$)</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Preço Unitário (R$)</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input type="number" placeholder="Mín" className="form-input" style={{ width: '50%' }} value={filterPriceMin} onChange={e => setFilterPriceMin(e.target.value)} />
                 <input type="number" placeholder="Máx" className="form-input" style={{ width: '50%' }} value={filterPriceMax} onChange={e => setFilterPriceMax(e.target.value)} />
               </div>
             </div>
 
-            {/* Selo do Anunciante */}
+            {/* 9. Aceita Menor Valor */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#ccc', cursor: 'pointer' }}>
+              <input type="checkbox" checked={filterAceitaMenor} onChange={e => setFilterAceitaMenor(e.target.checked)} />
+              Aceita proposta menor
+            </label>
+
+            {/* 10. Selo Mínimo Anunciante */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Selo do Anunciante</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Selo Mínimo</label>
               <select className="form-select" value={filterSelo} onChange={e => setFilterSelo(e.target.value)}>
                 <option value="">Todos</option>
-                <option value="Ouro">Ouro</option>
-                <option value="Prata">Prata</option>
-                <option value="Bronze">Bronze</option>
-                <option value="Sem">Sem Selo</option>
+                <option value="OURO">Ouro</option>
+                <option value="PRATA">Prata</option>
+                <option value="BRONZE">Bronze</option>
+                <option value="LIVRE">Sem exigência</option>
               </select>
             </div>
 
-            {/* Documentação */}
+            {/* 11. Tem Avaliação / Laudo */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Documentação</label>
-              <select className="form-select" value={filterDocs} onChange={e => setFilterDocs(e.target.value)}>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Possui Laudo Químico</label>
+              <select className="form-select" value={filterTemAvaliacao} onChange={e => setFilterTemAvaliacao(e.target.value)}>
                 <option value="">Indiferente</option>
-                <option value="Com licença/MTR">Com Licença / MTR</option>
+                <option value="true">Sim (Laudo Anexado)</option>
+                <option value="false">Não</option>
               </select>
             </div>
+
+            {/* 12. Responsável pelo Frete */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Responsável Frete</label>
+              <select className="form-select" value={filterResponsavelFrete} onChange={e => setFilterResponsavelFrete(e.target.value)}>
+                <option value="">Indiferente</option>
+                <option value="true">Anunciante paga</option>
+                <option value="false">Contraparte paga</option>
+              </select>
+            </div>
+
+            {/* 13. Infraestrutura Mínima */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Infraestrutura Mínima</label>
+              <select className="form-select" value={filterInfraestrutura} onChange={e => setFilterInfraestrutura(e.target.value)}>
+                <option value="">Todas</option>
+                <option value="Balança no local">Balança no local</option>
+                <option value="Ponte rolante">Ponte rolante</option>
+                <option value="Empilhadeira no local">Empilhadeira</option>
+                <option value="Rampa de acesso">Rampa de acesso</option>
+              </select>
+            </div>
+
+            {/* 14. Distância Máxima */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Distância Limite</label>
+              <select className="form-select" value={filterDistancia} onChange={e => setFilterDistancia(e.target.value)}>
+                <option value="Sem limite">Sem limite (Qualquer distância)</option>
+                <option value="50">Até 50 km</option>
+                <option value="100">Até 100 km</option>
+                <option value="300">Até 300 km</option>
+                <option value="500">Até 500 km</option>
+              </select>
+            </div>
+
+            {/* Location (UF & Cidade) removed by request */}
           </div>
         </aside>
 

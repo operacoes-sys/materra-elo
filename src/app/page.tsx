@@ -1483,6 +1483,7 @@ export default function Home() {
   const [tickerSecondsSince, setTickerSecondsSince] = useState(0)
 
   // Filters State
+  const [filterGrupo, setFilterGrupo] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [marketBalanceRatio, setMarketBalanceRatio] = useState(50)
   const [filterResiduo, setFilterResiduo] = useState('')
@@ -1493,6 +1494,21 @@ export default function Home() {
   const [filterMunicipio, setFilterMunicipio] = useState('')
   const [filterBusinessType, setFilterBusinessType] = useState('') // Paga, Recebe, Doação
   const [filterRadius, setFilterRadius] = useState('') // Raio em km
+  const [filterDistancia, setFilterDistancia] = useState('Sem limite')
+  const [filterFluxo, setFilterFluxo] = useState('')
+  const [filterAceitaMenor, setFilterAceitaMenor] = useState(false)
+  const [filterSituacao, setFilterSituacao] = useState('')
+  const [filterTemAvaliacao, setFilterTemAvaliacao] = useState('')
+  const [filterResponsavelFrete, setFilterResponsavelFrete] = useState('')
+  const [filterInfraestrutura, setFilterInfraestrutura] = useState('')
+  const [filterContract, setFilterContract] = useState('')
+  const [filterQtyMin, setFilterQtyMin] = useState('')
+  const [filterQtyMax, setFilterQtyMax] = useState('')
+  const [filterQtyUnit, setFilterQtyUnit] = useState('t')
+  const [filterPriceMin, setFilterPriceMin] = useState('')
+  const [filterPriceMax, setFilterPriceMax] = useState('')
+  const [filterSelo, setFilterSelo] = useState('')
+  const [filterUrgent, setFilterUrgent] = useState(false)
   const [sortBy, setSortBy] = useState('Mais recente')
 
   // Modals / Paywall states
@@ -2053,9 +2069,21 @@ export default function Home() {
         .eq('id_cadastro', userId)
         .order('data_publicacao', { ascending: false })
 
-      if (!error && data) {
-        setMyListings(data)
+      const dbListings = data || []
+      
+      // Load local storage mock listings
+      let localListings: any[] = []
+      try {
+        const localListStr = localStorage.getItem('materra_local_anuncios')
+        if (localListStr) {
+          const list = JSON.parse(localListStr)
+          localListings = list.filter((a: any) => !userId || a.id_cadastro === userId || !a.id_cadastro)
+        }
+      } catch (e) {
+        console.warn('Could not read local listings for dashboard:', e)
       }
+
+      setMyListings([...localListings, ...dbListings])
     } catch (e) {
       console.error('Erro ao buscar meus anúncios:', e)
     } finally {
@@ -2172,18 +2200,39 @@ export default function Home() {
 
       if (error) throw error
 
-      // Merge database records with Goiânia/Goiás seeds to ensure they are always present
       const dbList = data || []
-      const merged = [...MOCK_SEED_ANUNCIOS]
+      
+      // Load local storage mock listings
+      let localList: any[] = []
+      try {
+        const localListStr = localStorage.getItem('materra_local_anuncios')
+        if (localListStr) {
+          localList = JSON.parse(localListStr)
+        }
+      } catch (e) {
+        console.warn('Could not read local listings:', e)
+      }
+
+      const merged = [...localList, ...MOCK_SEED_ANUNCIOS]
       dbList.forEach((dbItem: any) => {
-        if (!merged.some(m => m.codigo === dbItem.codigo)) {
+        if (!merged.some(m => m.id === dbItem.id || m.codigo === dbItem.codigo)) {
           merged.push(dbItem)
         }
       })
       setListings(merged)
     } catch (err) {
       console.error('Erro ao buscar anúncios:', err)
-      setListings(MOCK_SEED_ANUNCIOS) // Fallback to seeds only if DB fails
+      // Fallback: merge local list with seeds
+      let localList: any[] = []
+      try {
+        const localListStr = localStorage.getItem('materra_local_anuncios')
+        if (localListStr) {
+          localList = JSON.parse(localListStr)
+        }
+      } catch (e) {
+        console.warn('Could not read local listings in catch fallback:', e)
+      }
+      setListings([...localList, ...MOCK_SEED_ANUNCIOS])
     } finally {
       setLoadingListings(false)
     }
@@ -2774,7 +2823,7 @@ export default function Home() {
       alert('Atenção: Você não enviou documentos para homologar sua Ficha Materra. Seu anúncio será publicado, mas ficará com reputação 0/0 até que envie a documentação.')
     }
 
-    router.push('/anuncios/publicar')
+    router.push(`/anuncios/publicar?tipo=${adRoleType}`)
   }
 
   const handleClosingTrigger = () => {
@@ -2788,39 +2837,10 @@ export default function Home() {
   // Filter Logic in-memory
   const filteredListings = listings
     .filter(item => {
-      // Handle legacy database mappings smoothly
+      // Tab check (tipo_anuncio matching activeTab)
       const matchesOffer = activeTab === 'Oferta' && (item.tipo_anuncio === 'Oferta' || item.tipo_anuncio === 'Oferta de resíduo')
       const matchesDemand = activeTab === 'Demanda' && (item.tipo_anuncio === 'Demanda' || item.tipo_anuncio === 'Pedido de compra')
       if (!matchesOffer && !matchesDemand) return false
-
-      if (filterCategory && item.categoria !== filterCategory) return false
-      if (filterResiduo && item.residuo !== filterResiduo) return false
-      
-      if (filterClasse && filterClasse !== 'Todas') {
-        const itemClass = item.classe || ''
-        if (filterClasse === 'I' && !itemClass.includes('I –') && itemClass !== 'I') return false
-        if (filterClasse === 'IIA' && !itemClass.includes('IIA') && itemClass !== 'IIA') return false
-        if (filterClasse === 'IIB' && !itemClass.includes('IIB') && itemClass !== 'IIB') return false
-      }
-      
-      if (filterEstadoFisico && item.estado_fisico !== filterEstadoFisico) return false
-      if (filterUf && item.uf !== filterUf) return false
-      if (filterMunicipio && !item.municipio?.toLowerCase().includes(filterMunicipio.toLowerCase())) return false
-
-      // Business Model filter (Paga, Recebe, Doação)
-      if (filterBusinessType) {
-        const valueText = (item.forma_cobranca || '').toLowerCase()
-        if (filterBusinessType === 'paga' && !valueText.includes('pago') && !valueText.includes('cobro')) return false
-        if (filterBusinessType === 'recebe' && !valueText.includes('recebo') && !valueText.includes('pago pelo')) return false
-        if (filterBusinessType === 'doacao' && !valueText.includes('doação') && !valueText.includes('sem cobrança') && item.valor_desejado !== 0 && String(item.valor_desejado).toLowerCase() !== 'doação') return false
-      }
-
-      // Radius filter
-      if (filterRadius) {
-        if (!profile?.cep || !item.cep) return false
-        const distance = getDistanceBetweenCeps(profile.cep, item.cep)
-        if (distance > parseInt(filterRadius)) return false
-      }
 
       // Favorites filter
       if (filterFavoritesOnly) {
@@ -2830,11 +2850,108 @@ export default function Home() {
       // Search Query filter (nome/codigo)
       if (filterSearchQuery) {
         const q = filterSearchQuery.toLowerCase().trim()
-        const residuoMatch = (item.residuo || '').toLowerCase().includes(q)
-        const idMatch = (item.id || '').toLowerCase().includes(q)
-        const codigoMatch = (item.codigo || '').toLowerCase().includes(q)
-        if (!residuoMatch && !idMatch && !codigoMatch) return false
+        const itemNome = item.nome_material || item.titulo || item.residuo || ''
+        const codeMatch = String(item.codigo || '').toLowerCase().includes(q)
+        if (!itemNome.toLowerCase().includes(q) && !codeMatch) return false
       }
+
+      // 1. Grupo compliance check
+      if (filterGrupo) {
+        const itemGrupo = item.grupo !== undefined && item.grupo !== null ? item.grupo : (item.classe?.includes('Classe I') ? 4 : 3)
+        if (String(itemGrupo) !== filterGrupo) return false
+      }
+
+      // 2. Categoria / Categoria_subcategoria
+      if (filterCategory) {
+        const itemCat = item.categoria_subcategoria || item.categoria || ''
+        if (!itemCat.toLowerCase().includes(filterCategory.toLowerCase())) return false
+      }
+
+      // 3. Resíduo específico
+      if (filterResiduo) {
+        const itemRes = item.residuo || ''
+        if (!itemRes.toLowerCase().includes(filterResiduo.toLowerCase())) return false
+      }
+
+      // 4. Classe
+      if (filterClasse && filterClasse !== 'Todas') {
+        const itemClass = item.classe || ''
+        if (filterClasse === 'I' && !itemClass.includes('I –') && itemClass !== 'I') return false
+        if (filterClasse === 'IIA' && !itemClass.includes('IIA') && itemClass !== 'IIA') return false
+        if (filterClasse === 'IIB' && !itemClass.includes('IIB') && itemClass !== 'IIB') return false
+      }
+
+      // 5. Distancia
+      if (filterDistancia && filterDistancia !== 'Sem limite') {
+        const maxDist = parseInt(filterDistancia) || 9999
+        const itemDist = item.distancia_km !== undefined ? item.distancia_km : 120
+        if (itemDist > maxDist) return false
+      }
+
+      // 6. Tipo_fluxo (VENDA, PASSIVO, DOACAO, COMPRA)
+      if (filterFluxo) {
+        const itemFluxo = item.tipo_fluxo || (item.forma_cobranca?.includes('Recebo') ? 'VENDA' : item.forma_cobranca?.includes('Doação') ? 'DOACAO' : 'PASSIVO')
+        if (itemFluxo !== filterFluxo) return false
+      }
+
+      // 7. Regime_fornecimento (LOTE_UNICO, CONTRATO)
+      if (filterContract) {
+        const itemRegime = item.regime_fornecimento || (item.prazo_recorrencia ? 'CONTRATO' : 'LOTE_UNICO')
+        if (filterContract === 'Lote Único' && itemRegime !== 'LOTE_UNICO') return false
+        if (filterContract === 'Contrato' && itemRegime !== 'CONTRATO') return false
+      }
+
+      // 8. Volume_total check
+      const itemVol = item.volume_total !== undefined ? item.volume_total : item.quantidade
+      if (filterQtyMin && itemVol < parseFloat(filterQtyMin)) return false
+      if (filterQtyMax && itemVol > parseFloat(filterQtyMax)) return false
+
+      // 9. Aceita_menor_valor
+      if (filterAceitaMenor && !item.aceita_menor_valor) return false
+
+      // 10. Preco_unidade check
+      const itemPrice = item.preco_unidade !== undefined ? item.preco_unidade : item.valor_desejado
+      if (filterPriceMin && itemPrice < parseFloat(filterPriceMin)) return false
+      if (filterPriceMax && itemPrice > parseFloat(filterPriceMax)) return false
+
+      // 11. Situacao_anuncio check
+      if (filterSituacao) {
+        const itemSituacao = item.situacao_anuncio || (item.urgencia_prazo === 'Urgente' ? 'EMERGENCIA' : 'NORMAL')
+        if (itemSituacao !== filterSituacao) return false
+      }
+
+      // 12. Selo_minimo check
+      if (filterSelo) {
+        const itemSelo = item.selo_minimo || (item.cadastros?.nivel_selo === 'Sem' ? 'LIVRE' : String(item.cadastros?.nivel_selo || 'LIVRE').toUpperCase())
+        if (filterSelo !== 'LIVRE' && itemSelo !== filterSelo) return false
+      }
+
+      // 13. Tem_avaliacao check
+      if (filterTemAvaliacao) {
+        const itemAval = item.tem_avaliacao !== undefined ? item.tem_avaliacao : item.tem_licenca
+        const expectedAval = filterTemAvaliacao === 'true'
+        if (itemAval !== expectedAval) return false
+      }
+
+      // 14. Responsavel_frete check
+      if (filterResponsavelFrete) {
+        const itemFrete = item.responsavel_frete !== undefined ? item.responsavel_frete : (item.quem_arca_frete === 'EU')
+        const expectedFrete = filterResponsavelFrete === 'true'
+        if (itemFrete !== expectedFrete) return false
+      }
+
+      // 15. Infraestrutura_minima check
+      if (filterInfraestrutura) {
+        const itemInfra = item.infraestrutura_minima || []
+        if (!itemInfra.includes(filterInfraestrutura)) return false
+      }
+
+      // Estado físico
+      if (filterEstadoFisico && item.estado_fisico !== filterEstadoFisico) return false
+
+      // Location (UF & Cidade)
+      if (filterUf && item.uf !== filterUf) return false
+      if (filterMunicipio && !item.municipio?.toLowerCase().includes(filterMunicipio.toLowerCase())) return false
 
       return true
     })
@@ -2855,6 +2972,7 @@ export default function Home() {
     })
 
   const hasActiveFilters = !!(
+    filterGrupo ||
     filterCategory ||
     filterResiduo ||
     (filterClasse && filterClasse !== 'Todas') ||
@@ -2864,7 +2982,19 @@ export default function Home() {
     filterBusinessType ||
     filterRadius ||
     filterFavoritesOnly ||
-    filterSearchQuery
+    filterSearchQuery ||
+    (filterDistancia && filterDistancia !== 'Sem limite') ||
+    filterFluxo ||
+    filterAceitaMenor ||
+    filterSituacao ||
+    filterTemAvaliacao ||
+    filterResponsavelFrete ||
+    filterInfraestrutura ||
+    filterContract ||
+    filterQtyMin ||
+    filterQtyMax ||
+    filterPriceMin ||
+    filterPriceMax
   )
 
   if (loading) {
@@ -5370,15 +5500,24 @@ export default function Home() {
                 borderRadius: '12px',
                 padding: '20px',
                 position: 'sticky',
-                top: '90px'
+                top: '90px',
+                maxHeight: 'calc(100vh - 140px)',
+                overflowY: 'auto',
+                overscrollBehavior: 'contain',
+                zIndex: 10
               }}>
                 <h2 style={{ fontSize: '1rem', color: '#fff', fontWeight: 800, marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Filtros Rápidos</span>
                   <button onClick={() => {
-                    setFilterCategory(''); setFilterResiduo(''); setFilterClasse('');
+                    setFilterGrupo(''); setFilterCategory(''); setFilterResiduo(''); setFilterClasse('');
                     setFilterEstadoFisico(''); setFilterAcondicionamento(''); setFilterUf('');
                     setFilterMunicipio(''); setFilterBusinessType('');
                     setFilterFavoritesOnly(false); setFilterSearchQuery('');
+                    setFilterDistancia('Sem limite'); setFilterFluxo('');
+                    setFilterAceitaMenor(false); setFilterSituacao('');
+                    setFilterTemAvaliacao(''); setFilterResponsavelFrete('');
+                    setFilterInfraestrutura(''); setFilterContract('');
+                    setFilterQtyMin(''); setFilterQtyMax(''); setFilterPriceMin(''); setFilterPriceMax('');
                   }} style={{ background: 'none', border: 'none', color: '#ff5353', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>
                     Limpar
                   </button>
@@ -5446,28 +5585,24 @@ export default function Home() {
                     </label>
                   </div>
                   
-                  {/* BUSINESS TYPE FILTER */}
+                  {/* 1. Nome do Material (Already integrated inside top search query) */}
+
+                  {/* 2. Grupo Compliance */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Tipo de Negócio</label>
-                    <select
-                      className="form-select"
-                      style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }}
-                      value={filterBusinessType}
-                      onChange={e => setFilterBusinessType(e.target.value)}
-                    >
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Compliance Grupo</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterGrupo} onChange={e => setFilterGrupo(e.target.value)}>
                       <option value="">Todos</option>
-                      <option value="paga">Paga para destinar</option>
-                      <option value="recebe">Recebe pelo resíduo</option>
-                      <option value="doacao">Doação</option>
+                      <option value="1">Grupo 1 (Coproduto)</option>
+                      <option value="2">Grupo 2 (Resíduo Classe II-A)</option>
+                      <option value="3">Grupo 3 (Resíduo Classe II-B)</option>
+                      <option value="4">Grupo 4 (Classe I Perigoso)</option>
                     </select>
-                    <span style={{ fontSize: '0.65rem', color: '#ffd700', marginTop: '4px', display: 'block', lineHeight: '1.2' }}>
-                      * Anúncios de doação podem virar leilões ascendentes se houver alta disputa.
-                    </span>
                   </div>
 
+                  {/* 3. Categoria IBAMA */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Categoria</label>
-                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }} value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setFilterResiduo(''); }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Categoria / Capítulo</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setFilterResiduo(''); }}>
                       <option value="">Todas</option>
                       {Object.keys(CATALOGO_MATERRA_ELO).map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -5478,7 +5613,7 @@ export default function Home() {
                   {filterCategory && (
                     <div className="form-group">
                       <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Resíduo específico</label>
-                      <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }} value={filterResiduo} onChange={e => setFilterResiduo(e.target.value)}>
+                      <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterResiduo} onChange={e => setFilterResiduo(e.target.value)}>
                         <option value="">Todos</option>
                         {(CATALOGO_MATERRA_ELO[filterCategory]?.subcategorias || []).map(res => (
                           <option key={res} value={res}>{res}</option>
@@ -5487,59 +5622,109 @@ export default function Home() {
                     </div>
                   )}
 
+                  {/* 4. Situação do Anúncio */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Classe</label>
-                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }} value={filterClasse} onChange={e => setFilterClasse(e.target.value)}>
-                      <option value="Todas">Todas</option>
-                      <option value="I">Classe I (Perigoso)</option>
-                      <option value="IIA">Classe IIA (Não Inerte)</option>
-                      <option value="IIB">Classe IIB (Inerte)</option>
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Situação do Anúncio</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterSituacao} onChange={e => {
+                      setFilterSituacao(e.target.value);
+                      setFilterUrgent(e.target.value === 'EMERGENCIA');
+                    }}>
+                      <option value="">Todas</option>
+                      <option value="NORMAL">Normal</option>
+                      <option value="DESTAQUE">Destaque (Selo)</option>
+                      <option value="EMERGENCIA">🚨 Emergência (Urgente)</option>
                     </select>
                   </div>
 
+                  {/* 5. Tipo de Fluxo */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Estado Físico</label>
-                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }} value={filterEstadoFisico} onChange={e => setFilterEstadoFisico(e.target.value)}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Tipo de Fluxo</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterFluxo} onChange={e => setFilterFluxo(e.target.value)}>
                       <option value="">Todos</option>
-                      <option value="Sólido">Sólido</option>
-                      <option value="Líquido">Líquido</option>
-                      <option value="Semissólido">Semissólido</option>
-                      <option value="Pastoso">Pastoso</option>
-                      <option value="Gasoso">Gasoso</option>
+                      <option value="VENDA">Venda (Oferta comercial)</option>
+                      <option value="COMPRA">Compra (Demanda comercial)</option>
+                      <option value="PASSIVO">Passivo (Pago para destinar)</option>
+                      <option value="DOACAO">Doação (Retirada grátis)</option>
                     </select>
                   </div>
 
+                  {/* 6. Regime de Fornecimento */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>UF Localização</label>
-                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }} value={filterUf} onChange={e => setFilterUf(e.target.value)}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Regime de Fornecimento</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterContract} onChange={e => setFilterContract(e.target.value)}>
                       <option value="">Todos</option>
-                      {ESTADOS_BRASIL.map(uf => (
-                        <option key={uf} value={uf}>{uf}</option>
-                      ))}
+                      <option value="Lote Único">Lote Único</option>
+                      <option value="Contrato">Contrato Recorrente</option>
                     </select>
                   </div>
 
+                  {/* 7. Volume Total Range */}
                   <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Raio de Distância</label>
-                    <select
-                      className="form-select"
-                      style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333' }}
-                      value={filterRadius}
-                      onChange={e => setFilterRadius(e.target.value)}
-                    >
-                      <option value="">Qualquer distância</option>
-                      <option value="10">Até 10 km</option>
-                      <option value="25">Até 25 km</option>
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Volume Total</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="number" placeholder="Mín" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', borderRadius: '4px', width: '50%', fontSize: '0.85rem' }} value={filterQtyMin} onChange={e => setFilterQtyMin(e.target.value)} />
+                      <input type="number" placeholder="Máx" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', borderRadius: '4px', width: '50%', fontSize: '0.85rem' }} value={filterQtyMax} onChange={e => setFilterQtyMax(e.target.value)} />
+                    </div>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px', marginTop: '6px' }} value={filterQtyUnit} onChange={e => setFilterQtyUnit(e.target.value)}>
+                      <option value="t">t (Tonelada)</option>
+                      <option value="kg">kg (Quilograma)</option>
+                      <option value="L">L (Litro)</option>
+                      <option value="m³">m³ (Metro Cúbico)</option>
+                      <option value="unidade">unidades</option>
+                    </select>
+                  </div>
+
+                  {/* 8. Preço Unitário Range */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Preço Unitário (R$)</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="number" placeholder="Mín" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', borderRadius: '4px', width: '50%', fontSize: '0.85rem' }} value={filterPriceMin} onChange={e => setFilterPriceMin(e.target.value)} />
+                      <input type="number" placeholder="Máx" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', borderRadius: '4px', width: '50%', fontSize: '0.85rem' }} value={filterPriceMax} onChange={e => setFilterPriceMax(e.target.value)} />
+                    </div>
+                  </div>
+
+                  {/* 11. Tem Avaliação / Laudo */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Possui Laudo Químico</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterTemAvaliacao} onChange={e => setFilterTemAvaliacao(e.target.value)}>
+                      <option value="">Indiferente</option>
+                      <option value="true">Sim (Laudo Anexado)</option>
+                      <option value="false">Não</option>
+                    </select>
+                  </div>
+
+                  {/* 12. Responsável pelo Frete */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Responsável Frete</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterResponsavelFrete} onChange={e => setFilterResponsavelFrete(e.target.value)}>
+                      <option value="">Indiferente</option>
+                      <option value="true">Anunciante paga</option>
+                      <option value="false">Contraparte paga</option>
+                    </select>
+                  </div>
+
+                  {/* 13. Infraestrutura Mínima */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Infraestrutura Mínima</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterInfraestrutura} onChange={e => setFilterInfraestrutura(e.target.value)}>
+                      <option value="">Todas</option>
+                      <option value="Balança no local">Balança no local</option>
+                      <option value="Ponte rolante">Ponte rolante</option>
+                      <option value="Empilhadeira no local">Empilhadeira</option>
+                      <option value="Rampa de acesso">Rampa de acesso</option>
+                    </select>
+                  </div>
+
+                  {/* 14. Distância Limite */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem', color: '#888' }}>Distância Limite</label>
+                    <select className="form-select" style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid #333', width: '100%', borderRadius: '4px' }} value={filterDistancia} onChange={e => setFilterDistancia(e.target.value)}>
+                      <option value="Sem limite">Sem limite (Qualquer distância)</option>
                       <option value="50">Até 50 km</option>
                       <option value="100">Até 100 km</option>
-                      <option value="200">Até 200 km</option>
+                      <option value="300">Até 300 km</option>
                       <option value="500">Até 500 km</option>
                     </select>
-                    {!profile?.cep && (
-                      <span style={{ fontSize: '0.65rem', color: '#888', marginTop: '4px', display: 'block', lineHeight: '1.2' }}>
-                        * Faça login com CEP cadastrado para usar filtro de raio.
-                      </span>
-                    )}
                   </div>
                 </div>
               </aside>
