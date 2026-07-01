@@ -237,10 +237,114 @@ export default function VitrineAnunciosPage() {
           console.warn('Database select error (falling back to mock items for wireframe):', error)
         }
 
+        const generate100MockCards = () => {
+          const categories = ["Plásticos", "Metais", "Orgânicos", "Papel/Papelão", "Lodos", "Vidros", "Madeira", "Eletrônicos", "Cinzas/Escórias", "Outros"]
+          const residues = {
+            "Plásticos": ["Aparas de PP triturado", "Filmes de PEBD limpo", "Sucata de PET prensado", "Peças injetadas de ABS", "Monofilamento de Nylon"],
+            "Metais": ["Cavaco de alumínio limpo", "Sucata ferrosa mista", "Limalha de ferro gusa", "Aparas de cobre eletrolítico", "Estamparia de aço inox"],
+            "Orgânicos": ["Resíduo agroindustrial de milho", "Bagaço de cana triturado", "Casca de arroz carbonizada", "Cama de frango tratada", "Torta de filtro de usina"],
+            "Papel/Papelão": ["Aparas de papel branco", "Papelão ondulado prensado", "Bobinas de papel kraft com avaria", "Refiles de cartolina"],
+            "Lodos": ["Lodo biológico desidratado (ETE)", "Lodo galvânico seco (Classe I)", "Lodo de ETA de curtume"],
+            "Vidros": ["Cacos de vidro plano transparente", "Embalagens de vidro âmbar trituradas", "Vidro parabrisa moído"],
+            "Madeira": ["Pallets de madeira padrão PBR usados", "Serragem de pinus seca", "Maravalha de eucalipto limpa"],
+            "Eletrônicos": ["Placas de circuito impresso obsoletas", "Carcaças plásticas de monitores", "Fios e cabos elétricos descascados"],
+            "Cinzas/Escórias": ["Cinza de caldeira de biomassa", "Escória de fundição de ferro", "Pó de despoeiramento de aciaria"],
+            "Outros": ["Resíduos industriais Classe I para co-processamento", "Varrição de fertilizantes nitrogenados", "Gesso acartonado (drywall) triturado"]
+          }
+          const acondicionamentos = ["Big Bag", "Tambor metálico", "Caçamba metálica", "Fardos prensados", "Granel sobre carreta"]
+          const ufs = ["GO", "DF", "TO", "MG"]
+          const cidades = {
+            "GO": ["Goiânia", "Anápolis", "Rio Verde", "Aparecida de Goiânia", "Senador Canedo", "Catalão", "Itumbiara", "Jataí", "Luziânia", "Valparaíso de Goiás"],
+            "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia", "Sobradinho"],
+            "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
+            "MG": ["Uberlândia", "Araguari", "Patos de Minas", "Uberaba", "Ituiutaba"]
+          }
+          const empresas = ["Ambev", "BRF", "Gerdau", "Votorantim", "Cargill", "Anglo American", "Vale", "Caramuru Alimentos", "Halexistar", "JBS", "Moinho Sete Irmãos", "Hypera Pharma"]
+          const selos = ["Ouro", "Prata", "Bronze"]
+
+          const list: any[] = []
+          for (let i = 1; i <= 100; i++) {
+            const cat = categories[i % categories.length]
+            const resList = residues[cat as keyof typeof residues]
+            const res = resList[i % resList.length]
+            const acond = acondicionamentos[i % acondicionamentos.length]
+            const uf = ufs[i % ufs.length]
+            const cidList = cidades[uf as keyof typeof cidades]
+            const mun = cidList[i % cidList.length]
+            const emp = empresas[i % empresas.length]
+            const selo = selos[i % selos.length]
+            
+            const qty = 5 + (i * 7) % 150
+            const valDesejado = 50 + (i * 12) % 600
+            
+            // Bidding options
+            const isLeilao = i % 3 !== 0 // 66% have bidding room active
+            const tipoAnuncio = i % 2 === 0 ? "Oferta" : "Demanda"
+            const formaCobranca = tipoAnuncio === "Oferta"
+              ? (i % 3 === 0 ? "Doação" : (i % 2 === 0 ? "Recebo pelo resíduo" : "Pago pela destinação"))
+              : (i % 3 === 0 ? "Doação" : (i % 2 === 0 ? "Pago pela destinação" : "Recebo pelo resíduo"))
+
+            const mappingTipoLeilao = isLeilao 
+              ? (formaCobranca.includes("Recebo") ? "Ascendente" : "Descendente")
+              : "Sem leilão"
+
+            // Deviation percentage text
+            const devPct = ((i * 7.5) % 30 - 15)
+            const percentual_desvio = formaCobranca === "Doação" ? "Doação" : `${devPct > 0 ? '+' : ''}${devPct.toFixed(1)}% do Index`
+
+            list.push({
+              id: `generated-seed-card-${i}`,
+              codigo: `MAT-GEN${String(i).padStart(3, '0')}`,
+              tipo_anuncio: tipoAnuncio,
+              categoria: cat,
+              residuo: res,
+              classe: i % 4 === 0 ? "I" : "IIA",
+              quantidade: parseFloat(qty.toFixed(1)),
+              unidade: i % 5 === 0 ? "m³" : "t",
+              frequencia: i % 3 === 0 ? "Recorrente" : "Única",
+              acondicionamento: acond,
+              uf,
+              municipio: mun,
+              forma_cobranca: formaCobranca,
+              valor_desejado: parseFloat(valDesejado.toFixed(1)),
+              valor_index: parseFloat((valDesejado * (1 - devPct / 100)).toFixed(1)),
+              percentual_desvio,
+              status: "Anunciado",
+              tipo_leilao: mappingTipoLeilao,
+              habilitar_sala_leilao: isLeilao && formaCobranca !== "Doação",
+              data_publicacao: new Date(Date.now() - (i % 15) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              cadastros: {
+                nome_ou_razao: emp,
+                nivel_selo: selo,
+                selo_verificado: true
+              },
+              // 15 exact keys for compliance search index mapping
+              grupo: i % 4 === 0 ? 4 : 3,
+              categoria_subcategoria: cat,
+              nome_material: res,
+              distancia_km: 10 + (i * 13) % 290,
+              tipo_fluxo: formaCobranca === "Doação" ? "DOACAO" : (tipoAnuncio === "Oferta" ? (formaCobranca.includes("Recebo") ? "VENDA" : "PASSIVO") : (formaCobranca.includes("Pago") ? "COMPRA" : "PASSIVO")),
+              regime_fornecimento: i % 3 === 0 ? "CONTRATO" : "LOTE_UNICO",
+              volume_total: parseFloat(qty.toFixed(1)),
+              aceita_menor_valor: i % 2 === 0,
+              preco_unidade: parseFloat(valDesejado.toFixed(1)),
+              situacao_anuncio: i % 5 === 0 ? "DESTAQUE" : "NORMAL",
+              selo_minimo: selo.toUpperCase(),
+              tem_avaliacao: i % 2 === 0,
+              responsavel_frete: i % 2 === 0,
+              infraestrutura_minima: "Acesso a carretas e caçambas padrão ANTT",
+              origem_processo_gerador: "Subproduto do processo de refino e fabricação industrial",
+              especificacoes_tecnicas_exigencias: "Laudo químico completo, isenção de contaminantes Classe I adicionais",
+              requisitos_adicionais_observacoes: "Retirada precisa cumprir horários comerciais, equipe equipada com EPIs homologados"
+            })
+          }
+          return list
+        }
+
         const dbListings = data || []
         
         // 3 High-fidelity premium mockup announcements matching the required form updates and contract lengths
-        const mockupAnuncios: any[] = []
+        const mockupAnuncios: any[] = generate100MockCards()
 
         // Retrieve local storage announcements
         let localAnuncios: any[] = []
