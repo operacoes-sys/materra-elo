@@ -7070,7 +7070,7 @@ export default function Home() {
                                         <button
                                           onClick={() => {
                                             if (!user) { setShowLoginGate(true); return; }
-                                            triggerPixPayment(item, 'NORMAL', 50)
+                                            triggerPixPayment(item, 'NORMAL', 20)
                                           }}
                                           style={{
                                             flex: 1, padding: '9px 10px', borderRadius: '6px', fontSize: '11px',

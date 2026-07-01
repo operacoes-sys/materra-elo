@@ -148,8 +148,10 @@ function FreteContent() {
 
   const [origemUf, setOrigemUf] = useState('SP')
   const [origemMun, setOrigemMun] = useState('São Paulo')
+  const [cepOrigem, setCepOrigem] = useState('')
   const [destinoUf, setDestinoUf] = useState('RJ')
   const [destinoMun, setDestinoMun] = useState('Rio de Janeiro')
+  const [cepDestino, setCepDestino] = useState('')
 
   const [dataColeta, setDataColeta] = useState('')
   const [horarioColeta, setHorarioColeta] = useState('08h-12h')
@@ -176,6 +178,10 @@ function FreteContent() {
   const [showCheckout, setShowCheckout] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState<'pay' | 'success'>('pay')
   const [createdRoomId, setCreatedRoomId] = useState('')
+  const [leilaoCego, setLeilaoCego] = useState(false)
+  const [showCarrierActivation, setShowCarrierActivation] = useState(false)
+  const [activatingRoom, setActivatingRoom] = useState<any>(null)
+  const [showBypassModal, setShowBypassModal] = useState(false)
 
   // Transportadora participation screen
   const [bidValue, setBidValue] = useState('')
@@ -194,6 +200,49 @@ function FreteContent() {
     GO: ['Goiânia', 'Anápolis', 'Aparecida de Goiânia', 'Rio Verde'],
     MG: ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora'],
     DF: ['Brasília']
+  }
+
+  // Load logistics from Supabase
+  const loadDbFreightAuctions = async () => {
+    try {
+      const { data: dbAuctions } = await supabase
+        .from('frete_leiloes')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (dbAuctions && dbAuctions.length > 0) {
+        const updatedAuctions = await Promise.all(dbAuctions.map(async (auc: any) => {
+          const { data: bList } = await supabase
+            .from('frete_lances')
+            .select('*')
+            .eq('id_leilao', auc.id)
+            .order('timestamp', { ascending: false })
+          
+          const formattedBids = (bList || []).map((b: any) => ({
+            id: b.id,
+            transportadora_id: b.id_transportadora,
+            preco: Number(b.preco),
+            timestamp: b.timestamp
+          }))
+
+          return {
+            ...auc,
+            lances: formattedBids
+          }
+        }))
+        
+        const localList = getStoredAuctions()
+        const merged = [...updatedAuctions]
+        localList.forEach((localItem: any) => {
+          if (!merged.some(m => m.id === localItem.id)) {
+            merged.push(localItem)
+          }
+        })
+        setAuctions(merged)
+        saveStoredAuctions(merged)
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar leilões de frete do banco:', e)
+    }
   }
 
   // Load session
@@ -219,6 +268,8 @@ function FreteContent() {
     setCurrentProfile(localProfile)
     setAuctions(getStoredAuctions())
     
+    await loadDbFreightAuctions()
+    
     if (localProfile && (localProfile.subtipo === 'Corretor' || localProfile.subtipo === 'Corretor/Controlador')) {
       try {
         const { data } = await supabase
@@ -239,26 +290,75 @@ function FreteContent() {
     loadSession()
   }, [])
 
-  // Auto calculate distance simulation on location change
+  // Autofill Inteligente from active material deal
   useEffect(() => {
+    const anuncioId = searchParams.get('anuncio_id')
+    if (!anuncioId) return
+
+    try {
+      const localAdsStr = localStorage.getItem('materra_local_anuncios') || '[]'
+      const localAds = JSON.parse(localAdsStr)
+      const foundAd = localAds.find((a: any) => a.id === anuncioId)
+      if (foundAd) {
+        setTipoCarga(foundAd.titulo || foundAd.residuo || '')
+        setQuantidade(String(foundAd.quantidade || ''))
+        setUnidade(foundAd.unidade === 't' ? 'toneladas' : foundAd.unidade === 'm³' ? 'm³' : 'toneladas')
+        if (foundAd.cep) {
+          setCepOrigem(foundAd.cep)
+        }
+        if (foundAd.uf) {
+          setOrigemUf(foundAd.uf)
+        }
+        if (foundAd.municipio) {
+          setOrigemMun(foundAd.municipio)
+        }
+      }
+    } catch (e) {
+      console.warn('Erro no autofill do frete:', e)
+    }
+  }, [searchParams])
+
+  // Pre-flight margins simulator (Pre-Flight) triggered automatically on changes to CEPs or vehicle type
+  useEffect(() => {
+    if (!cepOrigem || !cepDestino) return
+
+    // 1. Calculate geometric distance based on CEP prefixes
+    const cleanOrig = cepOrigem.replace(/\D/g, '')
+    const cleanDest = cepDestino.replace(/\D/g, '')
+    
     let distance = 250
-    if (origemUf === 'SP' && destinoUf === 'RJ') distance = 430
-    else if (origemUf === 'GO' && destinoUf === 'DF') distance = 200
-    else if (origemUf === 'SP' && destinoUf === 'MG') distance = 580
-    else if (origemUf === destinoUf) distance = 45
+    if (cleanOrig.substring(0, 3) === cleanDest.substring(0, 3)) {
+      distance = 15
+    } else if (cleanOrig.substring(0, 2) === cleanDest.substring(0, 2)) {
+      distance = 45
+    } else if (cleanOrig.substring(0, 1) === cleanDest.substring(0, 1)) {
+      distance = 120
+    } else {
+      const prefA = parseInt(cleanOrig.substring(0, 2)) || 10
+      const prefB = parseInt(cleanDest.substring(0, 2)) || 10
+      const diff = Math.abs(prefA - prefB)
+      distance = Math.max(50, diff * 65)
+    }
     setSimulatedDistance(distance)
-  }, [origemUf, destinoUf])
+
+    // 2. Base price multiplier based on vehicle type
+    let ratePerKm = 40
+    if (tipoCaminhao === 'Vanderleia' || tipoCaminhao === 'Bitrem') {
+      ratePerKm = 52.5
+    } else if (tipoCaminhao === 'Truck' || tipoCaminhao === 'Bitruck') {
+      ratePerKm = 38.0
+    } else if (tipoCaminhao === 'Toco' || tipoCaminhao === '3/4') {
+      ratePerKm = 24.5
+    }
+
+    const totalBase = distance * ratePerKm
+    setSimulatedIndexValue(totalBase)
+    setSimulationDone(true)
+  }, [cepOrigem, cepDestino, tipoCaminhao])
 
   const handleSimulate = (e: React.FormEvent) => {
     e.preventDefault()
-    setSimulating(true)
-    setTimeout(() => {
-      const ratePerKm = 49.4 // gives R$ 21.250 for 430km SP -> RJ
-      const total = simulatedDistance * ratePerKm
-      setSimulatedIndexValue(total)
-      setSimulating(false)
-      setSimulationDone(true)
-    }, 1500)
+    // Triggered manually as fallback or display update
   }
 
   const handleSwitchProfile = (roleKey: 'anunciante' | 'transpA' | 'transpB') => {
@@ -330,8 +430,10 @@ function FreteContent() {
       ].filter(Boolean),
       origem_uf: origemUf,
       origem_mun: origemMun,
+      cep_origem: cepOrigem || '01000-000',
       destino_uf: destinoUf,
       destino_mun: destinoMun,
+      cep_destino: cepDestino || '01000-000',
       distancia: simulatedDistance,
       data_coleta: dataColeta || new Date(Date.now() + 86400000).toISOString().split('T')[0],
       horario_coleta: horarioColeta,
@@ -349,6 +451,7 @@ function FreteContent() {
       duracao_leilao_horas: hours,
       data_fim_leilao: new Date(Date.now() + hours * 3600 * 1000).toISOString(),
       status: 'Aberto',
+      leilao_cego: leilaoCego, // blind auction flag
       participantes: ['transp-c-id', 'transp-d-id', 'transp-e-id'],
       lances: initialBids,
       taxas_adicionais_pagas: [], // unlocked transport ids
@@ -359,6 +462,55 @@ function FreteContent() {
     currentList.unshift(newAuction)
     saveStoredAuctions(currentList)
     setAuctions(currentList)
+
+    // Background insert to Supabase
+    const runDbInsert = async () => {
+      try {
+        const { data: dbAuc, error: errAuc } = await supabase
+          .from('frete_leiloes')
+          .insert([{
+            id_shipper: currentUser.id,
+            id_ficha_empresa: idFichaEmpresa,
+            razao_social_empresa: razaoSocialEmpresa,
+            tipo_carga: tipoCarga,
+            tipo_caminhao: tipoCaminhao,
+            quantidade: parseFloat(quantidade) || 20,
+            unidade,
+            condicoes_acesso: newAuction.condicoes_acesso,
+            origem_uf: origemUf,
+            origem_mun: origemMun,
+            cep_origem: newAuction.cep_origem,
+            destino_uf: destinoUf,
+            destino_mun: destinoMun,
+            cep_destino: newAuction.cep_destino,
+            distancia: simulatedDistance,
+            data_coleta: newAuction.data_coleta,
+            horario_coleta: horarioColeta,
+            data_entrega: newAuction.data_entrega,
+            documentos_exigidos: newAuction.documentos_exigidos,
+            observacoes,
+            valor_estimado: simulatedIndexValue,
+            duracao_leilao_horas: hours,
+            data_fim_leilao: newAuction.data_fim_leilao,
+            status: 'Aberto',
+            leilao_cego: leilaoCego
+          }])
+          .select()
+          .single()
+
+        if (!errAuc && dbAuc) {
+          const bidsToInsert = initialBids.map(b => ({
+            id_leilao: dbAuc.id,
+            id_transportadora: currentUser.id, // using current user id or simulated uuid
+            preco: b.preco
+          }))
+          await supabase.from('frete_lances').insert(bidsToInsert)
+        }
+      } catch (e) {
+        console.warn('Erro ao salvar cotação frete no banco:', e)
+      }
+    }
+    runDbInsert()
 
     // Log to audit trail
     try {
@@ -575,6 +727,19 @@ function FreteContent() {
     saveStoredAuctions(updated)
     setAuctions(updated)
 
+    // Sync status and winner with Supabase frete_leiloes
+    const updateDbWinner = async () => {
+      try {
+        await supabase
+          .from('frete_leiloes')
+          .update({ status: 'Finalizado', transportadora_vencedora_id: winnerId })
+          .eq('id', room.id)
+      } catch (e) {
+        console.warn('Erro ao atualizar vencedor do frete no Supabase:', e)
+      }
+    }
+    updateDbWinner()
+
     // Audit event
     try {
       const auditTrail = JSON.parse(localStorage.getItem('materra_compliance_audit_trail') || '[]')
@@ -586,6 +751,132 @@ function FreteContent() {
         entity_id: room.id,
         actor: currentProfile.nome_ou_razao,
         details: `Leilão reverso finalizado. Transportadora vencedora contratada: ${winnerId}.`,
+        timestamp: new Date().toISOString(),
+        status: 'Íntegro',
+        hash: 'SHA256-RFR-' + Math.random().toString(36).substring(2, 10)
+      })
+      localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+    } catch (e) {}
+  }
+
+  // Carrier activation payment confirmation (R$ 35,00)
+  const handleConfirmCarrierActivation = (room: any) => {
+    const updated = auctions.map((r: any) => {
+      if (r.id === room.id) {
+        return { ...r, taxa_ativacao_paga: true }
+      }
+      return r
+    })
+    saveStoredAuctions(updated)
+    setAuctions(updated)
+    setShowCarrierActivation(false)
+
+    // Log to audit trail
+    try {
+      const auditTrail = JSON.parse(localStorage.getItem('materra_compliance_audit_trail') || '[]')
+      auditTrail.unshift({
+        event_type: 'CARRIER_ACTIVATION_PAID',
+        event_category: 'Logística',
+        action: 'CONFIRM_ACTIVATION',
+        entity_type: 'Frete Reverso',
+        entity_id: room.id,
+        actor: currentProfile.nome_ou_razao,
+        details: `Taxa de ativação de frete paga pela transportadora (R$ 35,00). Contatos da carga liberados comercialmente.`,
+        timestamp: new Date().toISOString(),
+        status: 'Íntegro',
+        hash: 'SHA256-RFR-' + Math.random().toString(36).substring(2, 10)
+      })
+      localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+    } catch (e) {}
+  }
+
+  // Transporter bypass purchase (Furar a Fila do Frete - R$ 80,00)
+  const handleConfirmBypass = (room: any) => {
+    const updated = auctions.map((r: any) => {
+      if (r.id === room.id) {
+        return {
+          ...r,
+          status: 'Finalizado',
+          transportadora_vencedora_id: currentProfile.id,
+          taxa_ativacao_paga: true
+        }
+      }
+      return r
+    })
+    saveStoredAuctions(updated)
+    setAuctions(updated)
+    setShowBypassModal(false)
+
+    // Sync bypass with Supabase frete_leiloes
+    const updateDbBypass = async () => {
+      try {
+        await supabase
+          .from('frete_leiloes')
+          .update({
+            status: 'Finalizado',
+            transportadora_vencedora_id: currentProfile.id
+          })
+          .eq('id', room.id)
+      } catch (e) {
+        console.warn('Erro ao registrar bypass de frete no Supabase:', e)
+      }
+    }
+    updateDbBypass()
+
+    // Log to audit trail
+    try {
+      const auditTrail = JSON.parse(localStorage.getItem('materra_compliance_audit_trail') || '[]')
+      auditTrail.unshift({
+        event_type: 'CARRIER_BYPASS_PURCHASED',
+        event_category: 'Logística',
+        action: 'BYPASS_AUCTION',
+        entity_type: 'Frete Reverso',
+        entity_id: room.id,
+        actor: currentProfile.nome_ou_razao,
+        details: `Transportadora pagou o Super Contato de Frete de R$ 80,00 (Furar Fila). Leilão encerrado e contatos mútuos liberados.`,
+        timestamp: new Date().toISOString(),
+        status: 'Íntegro',
+        hash: 'SHA256-RFR-' + Math.random().toString(36).substring(2, 10)
+      })
+      localStorage.setItem('materra_compliance_audit_trail', JSON.stringify(auditTrail))
+    } catch (e) {}
+  }
+
+  // Supplier logs terminal deal (Deu Negócio)
+  const handleDeuNegocio = (room: any) => {
+    const updated = auctions.map((r: any) => {
+      if (r.id === room.id) {
+        return { ...r, status: 'SUSPENSO' }
+      }
+      return r
+    })
+    saveStoredAuctions(updated)
+    setAuctions(updated)
+
+    // Sync with Supabase frete_leiloes
+    const updateDbDeuNegocio = async () => {
+      try {
+        await supabase
+          .from('frete_leiloes')
+          .update({ status: 'SUSPENSO' })
+          .eq('id', room.id)
+      } catch (e) {
+        console.warn('Erro ao arquivar cotação frete no Supabase:', e)
+      }
+    }
+    updateDbDeuNegocio()
+
+    // Compliance audit trail event
+    try {
+      const auditTrail = JSON.parse(localStorage.getItem('materra_compliance_audit_trail') || '[]')
+      auditTrail.unshift({
+        event_type: 'REVERSE_AUCTION_DEAL_CLOSED',
+        event_category: 'Logística',
+        action: 'CLOSE_DEAL_LOGISTICS',
+        entity_type: 'Frete Reverso',
+        entity_id: room.id,
+        actor: currentProfile.nome_ou_razao,
+        details: `Carga contratada e enviada ao Cofre. Status do frete alterado para SUSPENSO (Arquivado). Transação congelada para conformidade legal.`,
         timestamp: new Date().toISOString(),
         status: 'Íntegro',
         hash: 'SHA256-RFR-' + Math.random().toString(36).substring(2, 10)
@@ -754,11 +1045,15 @@ function FreteContent() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <strong style={{ fontSize: '1.2rem', color: idx === 0 ? '#00ff66' : '#fff' }}>
-                                R$ {bid.preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {activeRoom.leilao_cego && !isShipper && !isMyBid
+                                  ? '🔒 R$ ••••'
+                                  : `R$ ${bid.preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                               </strong>
-                              <span style={{ display: 'block', fontSize: '0.7rem', color: '#555' }}>
-                                {(((bid.preco - activeRoom.valor_estimado) / activeRoom.valor_estimado) * 100).toFixed(1)}% vs. index
-                              </span>
+                              {!(activeRoom.leilao_cego && !isShipper && !isMyBid) && (
+                                <span style={{ display: 'block', fontSize: '0.7rem', color: '#555' }}>
+                                  {(((bid.preco - activeRoom.valor_estimado) / activeRoom.valor_estimado) * 100).toFixed(1)}% vs. index
+                                </span>
+                              )}
                             </div>
                           </div>
                         )
@@ -870,7 +1165,7 @@ function FreteContent() {
                                       className="btn btn-primary"
                                       style={{ padding: '4px 8px', fontSize: '0.7rem', color: '#000' }}
                                     >
-                                      Desbloquear (R$ 150)
+                                      Desbloquear (R$ 15)
                                     </button>
                                   </div>
                                 )}
@@ -903,9 +1198,22 @@ function FreteContent() {
                         <span style={{ fontSize: '0.8rem', color: '#4caf50', background: 'rgba(76,175,80,0.1)', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', display: 'block', marginBottom: '12px' }}>
                           ✅ COTAÇÃO FINALIZADA
                         </span>
-                        <p style={{ fontSize: '0.8rem', color: '#ccc', margin: 0 }}>
+                        <p style={{ fontSize: '0.8rem', color: '#ccc', margin: '0 0 16px 0' }}>
                           Vencedor contratado com sucesso. Todos os contatos foram desmascarados e o evento foi devidamente auditado no ledger.
                         </p>
+                        
+                        {isShipper && (
+                          <button
+                            onClick={() => handleDeuNegocio(activeRoom)}
+                            className="btn btn-primary"
+                            style={{
+                              width: '100%', padding: '12px', fontSize: '0.85rem',
+                              fontWeight: 'bold', color: '#000', background: 'linear-gradient(90deg, #ffd700, #ffb300)'
+                            }}
+                          >
+                            🤝 DEU NEGÓCIO / CONTRATAR DEFINITIVO
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -984,6 +1292,20 @@ function FreteContent() {
                           >
                             ⚡ Colocar Meu Preço
                           </button>
+                          
+                          <div style={{ marginTop: '10px' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActivatingRoom(activeRoom)
+                                setShowBypassModal(true)
+                              }}
+                              className="btn btn-secondary"
+                              style={{ width: '100%', padding: '10px', fontSize: '0.8rem', fontWeight: 'bold', background: 'linear-gradient(90deg, #ffd700, #ffb300)', color: '#000', border: 'none' }}
+                            >
+                              🚀 Furar Fila do Frete - R$ 80,00
+                            </button>
+                          </div>
                         </form>
 
                         {/* Current rank status for active transportadora */}
@@ -1181,7 +1503,7 @@ function FreteContent() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div className="form-group">
-                      <label className="form-label" style={{ color: '#fff' }}>Origem (Estado / Cidade)</label>
+                      <label className="form-label" style={{ color: '#fff' }}>Origem (Estado / Cidade / CEP)</label>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <select
                           className="form-select"
@@ -1202,11 +1524,19 @@ function FreteContent() {
                         >
                           {CITIES_BY_UF[origemUf]?.map((c: string) => <option key={c} value={c}>{c}</option>)}
                         </select>
+                        <input
+                          type="text"
+                          placeholder="CEP Origem"
+                          className="form-control"
+                          style={{ background: '#000', color: '#fff', border: '1px solid #333', width: '110px', fontSize: '0.8rem' }}
+                          value={cepOrigem}
+                          onChange={e => setCepOrigem(e.target.value)}
+                        />
                       </div>
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label" style={{ color: '#fff' }}>Destino (Estado / Cidade)</label>
+                      <label className="form-label" style={{ color: '#fff' }}>Destino (Estado / Cidade / CEP)</label>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <select
                           className="form-select"
@@ -1227,6 +1557,14 @@ function FreteContent() {
                         >
                           {CITIES_BY_UF[destinoUf]?.map((c: string) => <option key={c} value={c}>{c}</option>)}
                         </select>
+                        <input
+                          type="text"
+                          placeholder="CEP Destino"
+                          className="form-control"
+                          style={{ background: '#000', color: '#fff', border: '1px solid #333', width: '110px', fontSize: '0.8rem' }}
+                          value={cepDestino}
+                          onChange={e => setCepDestino(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1389,22 +1727,38 @@ function FreteContent() {
               {/* SIMULATED RESULT SECTION */}
               {simulationDone && (
                 <div style={{ marginTop: '24px', background: '#1c1503', border: '1px dashed var(--primary-500)', borderRadius: '8px', padding: '24px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Cotação de Referência & Tarifas de Transporte</span>
+                  <span style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>📊 Estimativa de Mercado RECY</span>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', margin: '16px 0', borderBottom: '1px solid #333', paddingBottom: '16px' }}>
+                    <div style={{ background: '#121212', padding: '12px', borderRadius: '6px', border: '1px solid #222' }}>
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#888' }}>Mínimo Esperado (-10%)</span>
+                      <strong style={{ fontSize: '1.25rem', color: '#00ff66', display: 'block', marginTop: '4px' }}>
+                        R$ {(simulatedIndexValue * 0.9).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </strong>
+                    </div>
+                    <div style={{ background: '#121212', padding: '12px', borderRadius: '6px', border: '1px solid #222' }}>
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#888' }}>Máximo Esperado (+15%)</span>
+                      <strong style={{ fontSize: '1.25rem', color: '#ff5252', display: 'block', marginTop: '4px' }}>
+                        R$ {(simulatedIndexValue * 1.15).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </strong>
+                    </div>
+                  </div>
+
                   <div style={{ margin: '12px 0' }}>
-                    <span style={{ display: 'block', fontSize: '0.8rem', color: '#888' }}>Índice Regional de Frete Materra</span>
+                    <span style={{ display: 'block', fontSize: '0.8rem', color: '#888' }}>Índice Médio Base de Frete Materra</span>
                     <strong style={{ fontSize: '1.8rem', color: 'var(--primary-500)', display: 'block', margin: '4px 0' }}>
                       R$ {simulatedIndexValue?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: '#666' }}>Cálculo baseado em {simulatedDistance} km percorrido (25 km redondo)</span>
+                    <span style={{ fontSize: '0.75rem', color: '#666' }}>Cálculo baseado em {simulatedDistance} km percorrido</span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem', color: '#ccc', borderTop: '1px solid #333', paddingTop: '12px', marginBottom: '16px', textAlign: 'left' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Transportadoras na região:</span>
+                      <span>Transportadoras no estado convidadas:</span>
                       <strong style={{ color: 'var(--primary-500)' }}>47 ativas</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Qualificadas (ANTT + Docs):</span>
+                      <span>Qualificadas (ANTT + Requisitos):</span>
                       <strong style={{ color: '#00ff66' }}>35 transportadoras</strong>
                     </div>
                   </div>
@@ -1432,20 +1786,24 @@ function FreteContent() {
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {auctions.filter((a: any) => a.status === 'Aberto').length === 0 ? (
+                  {auctions.filter((a: any) => a.status !== 'SUSPENSO').length === 0 ? (
                     <div style={{ border: '1px dashed #222', borderRadius: '8px', padding: '32px', textAlign: 'center' }}>
                       <p style={{ color: '#555', fontSize: '0.85rem', margin: 0 }}>Nenhum leilão de frete ativo no momento.</p>
                     </div>
                   ) : (
-                    auctions.filter((a: any) => a.status === 'Aberto').map((auc: any) => {
+                    auctions.filter((a: any) => a.status !== 'SUSPENSO').map((auc: any) => {
                       const hasBid = auc.lances.some((l: any) => l.transportadora_id === currentProfile.id)
                       const isInvited = !isShipper
 
                       return (
                         <div key={auc.id} style={{ background: '#0a0a0a', border: '1px solid #222', padding: '16px', borderRadius: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
                             <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{auc.origem_mun}/{auc.origem_uf} → {auc.destino_mun}/{auc.destino_uf}</strong>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--primary-500)', fontWeight: 'bold' }}>⏱️ {auc.duracao_leilao_horas}h</span>
+                            {auc.status === 'Finalizado' ? (
+                              <span style={{ fontSize: '0.65rem', color: '#00ff66', background: 'rgba(0,255,102,0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>FINALIZADO</span>
+                            ) : (
+                              <span style={{ fontSize: '0.7rem', color: 'var(--primary-500)', fontWeight: 'bold' }}>⏱️ {auc.duracao_leilao_horas}h</span>
+                            )}
                           </div>
 
                           <p style={{ fontSize: '0.75rem', color: '#aaa', margin: '0 0 12px 0' }}>
@@ -1515,27 +1873,36 @@ function FreteContent() {
                     <span>Veículo / Carga:</span>
                     <span>{tipoCaminhao} / {quantidade} {unidade}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: '8px', marginTop: '4px' }}>
-                    <span>Estimativa Regional:</span>
-                    <strong style={{ color: 'var(--primary-500)' }}>R$ {simulatedIndexValue?.toLocaleString('pt-BR')}</strong>
+                  
+                  <div style={{ background: '#0c0c0c', border: '1px solid #222', borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#ccc' }}>Taxa de Início Padrão:</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#fff' }}>R$ 35,00</strong>
+                    </div>
+                    
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.8rem', color: '#aaa', borderTop: '1px solid #222', paddingTop: '10px', marginTop: '10px' }}>
+                      <input
+                        type="checkbox"
+                        checked={leilaoCego}
+                        onChange={e => setLeilaoCego(e.target.checked)}
+                        style={{ accentColor: 'var(--primary-500)' }}
+                      />
+                      <span>Ativar Leilão às Cegas (+ R$ 25,00)</span>
+                    </label>
                   </div>
-                </div>
 
-                <div style={{ textAlign: 'center', border: '1px dashed #444', padding: '16px', borderRadius: '8px', background: '#0c0c0c', marginBottom: '20px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', textTransform: 'uppercase' }}>Taxa Lead de Início</span>
-                  <strong style={{ fontSize: '2rem', color: '#fff', display: 'block', margin: '4px 0' }}>R$ 150,00</strong>
-                  <span style={{ fontSize: '0.75rem', color: '#555' }}>Libera 1 contato da melhor transportadora gratuitamente</span>
-                </div>
+                  <div style={{ textAlign: 'center', border: '1px dashed #444', padding: '16px', borderRadius: '8px', background: '#0c0c0c', marginBottom: '20px' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', textTransform: 'uppercase' }}>Valor Total do Pix</span>
+                    <strong style={{ fontSize: '2rem', color: 'var(--primary-500)', display: 'block', margin: '4px 0' }}>
+                      R$ {leilaoCego ? '60,00' : '35,00'}
+                    </strong>
+                    <span style={{ fontSize: '0.75rem', color: '#555' }}>Libera 1 contato da melhor transportadora gratuitamente</span>
+                  </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem', color: '#888', marginBottom: '24px', lineHeight: 1.4 }}>
-                  <span>✓ Envia convites para 35 transportadoras qualificadas da região.</span>
-                  <span>✓ Acesso completo ao ranking em tempo real por 24h.</span>
-                  <span>✓ Contatos são desmascarados assim que o deal fechar.</span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button onClick={() => setShowCheckout(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px', border: '1px solid #333' }}>Cancelar</button>
-                  <button onClick={handleConfirmLeadFee} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar R$ 150 (Pix)</button>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={() => setShowCheckout(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px', border: '1px solid #333' }}>Cancelar</button>
+                    <button onClick={handleConfirmLeadFee} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar R$ {leilaoCego ? '60,00' : '35,00'} (Pix)</button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -1591,16 +1958,147 @@ function FreteContent() {
 
             <div style={{ background: '#0a0a0a', padding: '16px', borderRadius: '8px', border: '1px solid #222', textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>Valor por Contato</span>
-              <strong style={{ display: 'block', fontSize: '2rem', color: '#fff', marginTop: '4px' }}>R$ 150,00</strong>
+              <strong style={{ display: 'block', fontSize: '2rem', color: '#fff', marginTop: '4px' }}>R$ 15,00</strong>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowMultiUnlock(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px', border: '1px solid #333' }}>Cancelar</button>
-              <button onClick={() => handleConfirmMultiUnlock(activeRoom)} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar e Desbloquear</button>
+              <button onClick={() => handleConfirmMultiUnlock(activeRoom)} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar e Desbloquear (R$ 15)</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* CARRIER ACTIVATION FEE MODAL */}
+      {showCarrierActivation && activatingRoom && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px'
+        }}>
+          <div style={{
+            background: '#121212', border: '2px solid var(--primary-500)', borderRadius: '16px',
+            width: '100%', maxWidth: '450px', padding: '32px', position: 'relative', boxShadow: '0 0 30px rgba(255,215,0,0.15)'
+          }}>
+            <button onClick={() => setShowCarrierActivation(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: '#aaa', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+            
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '12px' }}>
+              💳 TAXA DE ATIVAÇÃO COMERCIAL (TRANSPORTADORA)
+            </h3>
+            
+            <p style={{ color: '#aaa', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
+              Para visualizar os dados de contato do fornecedor e finalizar o carregamento da carga, confirme o pagamento da taxa de ativação.
+            </p>
+
+            <div style={{ background: '#0a0a0a', padding: '16px', borderRadius: '8px', border: '1px solid #222', textAlign: 'center', marginBottom: '24px' }}>
+              <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>Valor da Taxa</span>
+              <strong style={{ display: 'block', fontSize: '2rem', color: '#fff', marginTop: '4px' }}>R$ 35,00</strong>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowCarrierActivation(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px', border: '1px solid #333' }}>Cancelar</button>
+              <button onClick={() => handleConfirmCarrierActivation(activatingRoom)} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar e Ativar (Pix)</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BYPASS LOGISTICS MODAL (FURAR FILA - R$ 80,00) */}
+      {showBypassModal && activatingRoom && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px'
+        }}>
+          <div style={{
+            background: '#121212', border: '2px solid var(--primary-500)', borderRadius: '16px',
+            width: '100%', maxWidth: '450px', padding: '32px', position: 'relative', boxShadow: '0 0 30px rgba(255,215,0,0.15)'
+          }}>
+            <button onClick={() => setShowBypassModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: '#aaa', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+            
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '12px' }}>
+              💳 FURAR FILA DO FRETE (SUPER CONTATO)
+            </h3>
+            
+            <p style={{ color: '#aaa', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
+              Ao furar a fila do frete, você encerra a disputa imediatamente, se torna a transportadora vencedora e libera contatos diretos com o dono da carga.
+            </p>
+
+            <div style={{ background: '#0a0a0a', padding: '16px', borderRadius: '8px', border: '1px solid #222', textAlign: 'center', marginBottom: '24px' }}>
+              <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>Valor do Super Contato</span>
+              <strong style={{ display: 'block', fontSize: '2rem', color: '#fff', marginTop: '4px' }}>R$ 80,00</strong>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowBypassModal(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px', border: '1px solid #333' }}>Cancelar</button>
+              <button onClick={() => handleConfirmBypass(activatingRoom)} className="btn btn-primary" style={{ flex: 2, padding: '12px', color: '#000', fontWeight: 'bold', background: 'var(--primary-500)' }}>Pagar R$ 80 (Pix)</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HISTÓRICO | AUDIT TRAIL | CONTATOS (Cofre) */}
+      <div style={{ background: '#0a0a0a', borderTop: '2px solid #333', padding: '32px 0', marginTop: '48px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ borderBottom: '1px solid #222', paddingBottom: '12px', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '1.1rem', color: '#888', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              🔒 HISTÓRICO | AUDIT TRAIL | CONTATOS (Cofre Logístico)
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#555', margin: '4px 0 0 0' }}>
+              Contratos encerrados, auditoria de lances e trilha de compliance de logística.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div>
+              <h4 style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '12px', textTransform: 'uppercase' }}>Cofre de Operações</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {auctions.filter((a: any) => a.status === 'SUSPENSO').length === 0 ? (
+                  <p style={{ fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Nenhum contrato arquivado no cofre de fretes.</p>
+                ) : (
+                  auctions.filter((a: any) => a.status === 'SUSPENSO').map((auc: any) => (
+                    <div key={auc.id} style={{ background: '#121212', border: '1px solid #222', borderRadius: '8px', padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{auc.origem_mun}/{auc.origem_uf} → {auc.destino_mun}/{auc.destino_uf}</strong>
+                        <span style={{ fontSize: '0.7rem', color: '#00ff66', background: 'rgba(0,255,102,0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>CONTRATO ATIVADO</span>
+                      </div>
+                      <p style={{ fontSize: '0.75rem', color: '#aaa', margin: 0, lineHeight: 1.4 }}>
+                        Carga: {auc.tipo_carga} ({auc.quantidade} {auc.unidade})<br />
+                        Veículo contratado: {auc.tipo_caminhao}<br />
+                        Valor fechado: R$ {auc.lances.find((l: any) => l.transportadora_id === auc.transportadora_vencedora_id)?.preco?.toLocaleString('pt-BR') || auc.valor_estimado?.toLocaleString('pt-BR')}<br />
+                        <span style={{ color: '#555', fontSize: '0.65rem', display: 'block', marginTop: '6px' }}>Cod. ID: {auc.id}</span>
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '12px', textTransform: 'uppercase' }}>Trilha de Auditoria Compliance</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '250px', overflowY: 'auto' }}>
+                {(() => {
+                  try {
+                    const localTrail = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('materra_compliance_audit_trail') || '[]' : '[]')
+                    const logs = localTrail.filter((t: any) => t.event_category === 'Logística' || t.entity_type === 'Frete Reverso')
+                    if (logs.length === 0) return <p style={{ fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Nenhum log de conformidade registrado.</p>
+                    return logs.map((log: any, idx: number) => (
+                      <div key={idx} style={{ background: '#0a0a0a', borderLeft: '3px solid var(--primary-500)', padding: '10px', fontSize: '0.75rem', color: '#ccc' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '0.65rem', marginBottom: '4px' }}>
+                          <span>{log.actor} ({log.action})</span>
+                          <span>{new Date(log.timestamp).toLocaleTimeString('pt-BR')}</span>
+                        </div>
+                        <p style={{ margin: 0 }}>{log.details}</p>
+                        <span style={{ fontSize: '0.65rem', color: '#00ff66', display: 'block', marginTop: '4px' }}>🔒 {log.status} ({log.hash})</span>
+                      </div>
+                    ))
+                  } catch (e) {
+                    return null
+                  }
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* spacer to avoid content being covered by the switcher */}
       <div style={{ height: '90px' }} />

@@ -284,12 +284,60 @@ function NegotiationRoomContent() {
     loadData()
   }, [roomId])
 
+  // Real-time subscription to anuncios_lances
+  useEffect(() => {
+    if (!ad || !ad.id || !room) return
+
+    const channel = supabase
+      .channel(`lances-ad-${ad.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'anuncios_lances',
+        filter: `id_anuncio=eq.${ad.id}`
+      }, async (payload: any) => {
+        const newBid = payload.new
+        // Check if we already have it in local messages
+        const exists = room.mensagens.some((m: any) => m.id === `msg_bid_db_${newBid.id}`)
+        if (!exists) {
+          // Resolve name
+          const { data: userCad } = await supabase
+            .from('cadastros')
+            .select('nome_ou_razao')
+            .eq('id', newBid.id_usuario)
+            .single()
+
+          const bidderName = userCad?.nome_ou_razao || 'Interessado'
+          const newMsg = {
+            id: `msg_bid_db_${newBid.id}`,
+            remetente_id: newBid.id_usuario,
+            remetente_nome: bidderName,
+            texto: `Nova Oferta: ${ad.quantidade || 20} ${ad.unidade || 't'} ao preço de R$ ${Number(newBid.valor_lance).toLocaleString('pt-BR', {minimumFractionDigits:2})}/${ad.unidade || 't'}`,
+            tipo: 'PROPOSTA_INTERESSADO',
+            quantidade: ad.quantidade || 20,
+            preco: Number(newBid.valor_lance),
+            timestamp: newBid.timestamp || new Date().toISOString()
+          }
+
+          updateRoomState({
+            ...room,
+            mensagens: [...room.mensagens, newMsg]
+          })
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [ad, room])
+
   // Countdown timer effect
   useEffect(() => {
-    if (!ad || !ad.data_fim_leilao) return
+    if (!ad || !(ad.data_fim_real || ad.data_fim_leilao)) return
 
     const updateTimer = () => {
-      setTimeLeftText(calculateTimeLeft(ad.data_fim_leilao))
+      setTimeLeftText(calculateTimeLeft(ad.data_fim_real || ad.data_fim_leilao))
     }
     updateTimer()
     const timerId = setInterval(updateTimer, 1000)
@@ -447,7 +495,7 @@ function NegotiationRoomContent() {
   }
 
   // Submit Bid (From Interested/Bidder)
-  const handleSubmitBid = (e: React.FormEvent) => {
+  const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!room || !ad || !currentUser) return
 
@@ -459,35 +507,63 @@ function NegotiationRoomContent() {
       return
     }
 
-    // Bid validation rules
-    const lastBid = room.mensagens.filter((m: any) => m.tipo?.includes('PROPOSTA')).pop()
-    const lastPrice = lastBid ? Number(lastBid.preco) : Number(ad.valor_desejado)
+    try {
+      // Atomic verification in public.anuncios_lances
+      const { data: latestBids, error: errLatest } = await supabase
+        .from('anuncios_lances')
+        .select('valor_lance')
+        .eq('id_anuncio', ad.id)
+        .order('timestamp', { ascending: false })
+        .limit(1)
 
-    if (ad.tipo_leilao === 'Ascendente') {
-      if (price <= lastPrice) {
-        alert(`No leilão Ascendente, seu lance deve ser MAIOR que a proposta anterior (R$ ${lastPrice.toLocaleString('pt-BR')}).`)
-        return
+      if (errLatest) throw errLatest
+
+      const lastPrice = latestBids && latestBids.length > 0
+        ? Number(latestBids[0].valor_lance)
+        : Number(ad.valor_desejado)
+
+      if (ad.tipo_anuncio === 'Oferta') {
+        if (price <= lastPrice) {
+          alert(`Seu lance de R$ ${price.toLocaleString('pt-BR')} deve ser maior que o lance atual (R$ ${lastPrice.toLocaleString('pt-BR')}).`)
+          return
+        }
+      } else {
+        if (price >= lastPrice) {
+          alert(`Seu lance de R$ ${price.toLocaleString('pt-BR')} deve ser menor que o lance atual (R$ ${lastPrice.toLocaleString('pt-BR')}).`)
+          return
+        }
       }
-    } else if (ad.tipo_leilao === 'Descendente') {
-      if (price >= lastPrice) {
-        alert(`No leilão Descendente, seu lance deve ser MENOR que a proposta anterior (R$ ${lastPrice.toLocaleString('pt-BR')}).`)
-        return
+
+      // Insert lance to database
+      const { data: newBidData, error: errInsert } = await supabase
+        .from('anuncios_lances')
+        .insert([{
+          id_anuncio: ad.id,
+          id_usuario: currentUser.id,
+          valor_lance: price
+        }])
+        .select()
+        .single()
+
+      if (errInsert) throw errInsert
+
+      const newMsg = {
+        id: `msg_bid_db_${newBidData.id}`,
+        remetente_id: currentUser.id,
+        remetente_nome: currentProfile.nome_ou_razao,
+        texto: `Nova Oferta: ${qty} ${ad.unidade} ao preço de R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits:2})}/${ad.unidade}`,
+        tipo: 'PROPOSTA_INTERESSADO',
+        quantidade: qty,
+        preco: price,
+        timestamp: new Date().toISOString()
       }
-    }
 
-    const newMsg = {
-      id: 'msg_bid_' + Date.now(),
-      remetente_id: currentUser.id,
-      remetente_nome: currentProfile.nome_ou_razao,
-      texto: `Nova Oferta: ${qty} ${ad.unidade} ao preço de R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits:2})}/${ad.unidade}`,
-      tipo: 'PROPOSTA_INTERESSADO',
-      quantidade: qty,
-      preco: price,
-      timestamp: new Date().toISOString()
-    }
+      checkAntiSnipeAndSubmit(newMsg)
+      setShowBidForm(false)
 
-    checkAntiSnipeAndSubmit(newMsg)
-    setShowBidForm(false)
+    } catch (err: any) {
+      alert('Erro ao enviar lance: ' + err.message)
+    }
   }
 
   // Submit Counter-proposal (From Advertiser/Anunciante)
@@ -708,7 +784,8 @@ function NegotiationRoomContent() {
   // Helper checks
   const isAdvertiser = currentUser.id === ad.id_cadastro || currentUser.id === (anuncianteProfile?.id || MOCK_PROFILES.anunciante.id)
   const finalProposal = room.mensagens.filter((m: any) => m.tipo?.includes('PROPOSTA') || m.tipo?.includes('CONTRA')).pop()
-  const isClosed = room.status === 'Fechada'
+  const isTimerExpired = timeLeftText === 'Finalizado' || timeLeftText === 'Encerrado' || (ad && (ad.data_fim_real || ad.data_fim_leilao) && new Date(ad.data_fim_real || ad.data_fim_leilao).getTime() <= Date.now())
+  const isClosed = room.status === 'Fechada' || room.status === 'Finalizado' || room.status === 'Fechado' || room.status === 'Arrematado' || room.status === 'SUSPENSO' || isTimerExpired
   const isRejected = room.status === 'Rejeitada'
   const isPendingMyResponse = finalProposal && finalProposal.remetente_id !== currentUser.id && !isClosed && !isRejected
 

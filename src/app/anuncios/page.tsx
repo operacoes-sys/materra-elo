@@ -1303,7 +1303,7 @@ export default function VitrineAnunciosPage() {
                       {item.habilitar_sala_leilao ? (
                         <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
                           <button
-                            onClick={() => triggerPixPayment(item, 'NORMAL', 50)}
+                            onClick={() => triggerPixPayment(item, 'NORMAL', 20)}
                             style={{
                               flex: 1, padding: '10px 10px', borderRadius: '6px', fontSize: '0.78rem',
                               fontWeight: 700, background: 'none', color: 'var(--primary)',
