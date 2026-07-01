@@ -2312,7 +2312,6 @@ export default function PublicarAnuncioPage() {
                       Se desativado, o anúncio não terá disputa de lances. Os interessados farão o desbloqueio direto do seu contato por R$ 45,00.
                     </span>
                   </div>
-                </div>
               ) : (
                 <div style={{ background: '#111', border: '1px solid #222', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
                   <label className="form-label" style={{ marginBottom: '10px' }}>Se houver mais de um interessado na coleta gratuita, como decidir o vencedor? *</label>
